@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int              @id @default(autoincrement())
+  username        String           @unique
+  email           String?          @unique
+  passwordHash    String           @map("password_hash")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  sendRequest     Friendship[]     @relation("Requester")
+  receivedRequest Friendship[]     @relation("Requestee")
+  sendMessage     DirectMessage[]  @relation("Sender")
+  receivedMessage DirectMessage[]  @relation("Receiver")
+  createdRoom     Room[]
+  membership      RoomMember[]
+  groupMessage    GroupMessage[]
+  roomStatuses    UserRoomStatus[]
+  invitations     Invitation[]     @relation("CreatedBy")
+  usedInvitations Invitation[]     @relation("UsedBy")
+
+  @@map("users")
+}
+
+model Friendship {
+  id          Int      @id @default(autoincrement())
+  requesterId Int      @map("requester_id")
+  requesteeId Int      @map("requestee_id")
+  status      String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  requester   User     @relation("Requester", fields: [requesterId], references: [id])
+  requestee   User     @relation("Requestee", fields: [requesteeId], references: [id])
+
+  @@map("friendships")
+}
+
+model DirectMessage {
+  id         Int      @id @default(autoincrement())
+  senderId   Int      @map("sender_id")
+  receiverId Int      @map("receiver_id")
+  content    String
+  isRead     Boolean  @default(false) @map("is_read")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  sender     User     @relation("Sender", fields: [senderId], references: [id])
+  receiver   User     @relation("Receiver", fields: [receiverId], references: [id])
+
+  @@map("direct_messages")
+}
+
+model Room {
+  id             Int              @id @default(autoincrement())
+  name           String
+  creatorId      Int              @map("creator_id")
+  isPrivate      Boolean          @map("is_private")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  creator        User             @relation(fields: [creatorId], references: [id])
+  members        RoomMember[]
+  GroupMessage   GroupMessage[]
+  UserRoomStatus UserRoomStatus[]
+  Invitation     Invitation[]
+
+  @@map("rooms")
+}
+
+model RoomMember {
+  id       Int      @id @default(autoincrement())
+  roomId   Int      @map("room_id")
+  userId   Int      @map("user_id")
+  joinedAt DateTime @default(now()) @map("joined_at")
+  isAdmin  Boolean  @default(false)
+  room     Room     @relation(fields: [roomId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@map("room_members")
+}
+
+model GroupMessage {
+  id        Int              @id @default(autoincrement())
+  roomId    Int              @map("room_id")
+  senderId  Int              @map("sender_id")
+  content   String
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+  room      Room             @relation(fields: [roomId], references: [id])
+  sender    User             @relation(fields: [senderId], references: [id])
+  statuses  UserRoomStatus[]
+
+  @@map("group_messaged")
+}
+
+model UserRoomStatus {
+  userId            Int
+  roomId            Int           @map("room_id")
+  lastReadMessageId Int
+  updatedAt         DateTime      @updatedAt
+  user              User          @relation(fields: [userId], references: [id])
+  room              Room          @relation(fields: [roomId], references: [id])
+  lastReadMessage   GroupMessage? @relation(fields: [lastReadMessageId], references: [id])
+
+  @@id([userId, roomId])
+  @@map("user_room_status")
+}
+
+model Invitation {
+  id        Int       @id @default(autoincrement())
+  roomId    Int
+  token     String
+  createdBy Int
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  usedBy    Int
+  usedAt    DateTime?
+  room      Room      @relation(fields: [roomId], references: [id])
+  creator   User      @relation("CreatedBy", fields: [createdBy], references: [id])
+  user      User?     @relation("UsedBy", fields: [usedBy], references: [id])
+
+  @@map("invitations")
+}
