@@ -3,7 +3,7 @@ import { sign } from "hono/jwt";
 import { AuthRepository } from "../../domain/auth/auth.repository";
 //import { hash, verify } from "argon2";
 
-export const authRepositoryImpl: AuthRepository = {
+export const AuthRepositoryImpl: AuthRepository = {
   hashPassword: async (plain) =>
     await Bun.password.hash(plain, {
       algorithm: "argon2id",

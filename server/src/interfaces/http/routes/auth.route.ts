@@ -1,33 +1,39 @@
 import { Hono } from "hono";
 import {
+  authUser,
   LoginParams,
   RegisterParams,
   validateLogin,
   validateRegister,
-  authUser,
+  validateUserUpdate,
 } from "../middleware/auth.middlware";
-import { userService } from "../../../domain/user/user.service";
+import { UserService } from "../../../domain/user/user.service";
 import { userRepositoryImpl } from "../../../infrastructure/repositories/user.repositoryimpl";
 import {
   createErrorResponse,
   createSuccessResponse,
 } from "../../../shared/utils/response.util";
-import { authService } from "../../../domain/auth/auth.service";
-import { authRepositoryImpl } from "../../../infrastructure/repositories/auth.repositoryimpl";
+import { AuthService } from "../../../domain/auth/auth.service";
+import { AuthRepositoryImpl } from "../../../infrastructure/repositories/auth.repositoryimpl";
 import { Prisma } from "../../../../generated/prisma";
+import { UpdateUserData } from "../../../domain/user/user.model";
 
+// returning type from middleware
 type Variables = {
   validateLoginData: LoginParams;
   validateRegisterData: RegisterParams;
+  validateUserUpdate: UpdateUserData;
   userId: number;
 };
 
-const authRoutes = new Hono<{ Variables: Variables }>();
-
-const authservice = authService(
-  userService(userRepositoryImpl),
-  authRepositoryImpl,
+// initialize services
+const authservice = AuthService(
+  UserService(userRepositoryImpl),
+  AuthRepositoryImpl,
 );
+
+// initialize hono route
+const authRoutes = new Hono<{ Variables: Variables }>();
 
 authRoutes.post("/login", validateLogin, async (c) => {
   const validate = c.get("validateLoginData");
@@ -50,7 +56,7 @@ authRoutes.post("/register", validateRegister, async (c) => {
   }
 });
 
-authRoutes.get("/me", async (c) => {
+authRoutes.get("/me", authUser, async (c) => {
   const userId = c.get("userId");
   try {
     const user = await authservice.me(userId);
@@ -58,11 +64,30 @@ authRoutes.get("/me", async (c) => {
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       return c.json(createErrorResponse("Something wrong", error.message), 400);
-    } else {
+    } else if (error instanceof Error) {
       return c.json(
         createErrorResponse("Something wrong", error?.message),
         400,
       );
+    }
+  }
+});
+authRoutes.put("/me", authUser, validateUserUpdate, async (c) => {
+  const userId = c.get("userId");
+  const validated = c.get("validateUserUpdate");
+  try {
+    const user = await authservice.updatUser(
+      {
+        username: validated.username,
+        email: validated.email,
+        password: validated.password,
+      },
+      userId,
+    );
+    return c.json(createSuccessResponse("success", user));
+  } catch (error) {
+    if (error instanceof Error) {
+      return c.json(createErrorResponse(error.message), 400);
     }
   }
 });

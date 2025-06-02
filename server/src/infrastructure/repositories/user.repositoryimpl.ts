@@ -1,5 +1,5 @@
 import { User } from "../../../generated/prisma";
-import { CreateUserData } from "../../domain/user/user.model";
+import { CreateUserData, UpdateUserData } from "../../domain/user/user.model";
 import { UserRepository } from "../../domain/user/user.repository";
 import { prisma } from "../db/db";
 
@@ -13,6 +13,28 @@ export const userRepositoryImpl: UserRepository = {
       },
     });
     return user;
+  },
+  update: async (
+    data: UpdateUserData,
+    userId: number,
+  ): Promise<Omit<User, "passwordHash">> => {
+    return await prisma.user.update({
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      data: {
+        username: data.username,
+        email: data.email,
+        passwordHash: data.password,
+      },
+      where: {
+        id: userId,
+      },
+    });
   },
   findById: async (id: number): Promise<User | null> => {
     return await prisma.user.findUnique({ where: { id } });
