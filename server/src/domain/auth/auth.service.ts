@@ -1,11 +1,12 @@
-import { CreateUserData } from "../user/user.model";
-import { userService } from "../user/user.service";
+import { CreateUserData, UpdateUserData } from "../user/user.model";
+import { UserService } from "../user/user.service";
 import { AuthCredentials, AuthResult } from "./auth.model";
 import { type AuthRepository } from "./auth.repository";
 import { User } from "../../../generated/prisma";
+import { Omit } from "@prisma/client/runtime/library";
 
-export const authService = (
-  userservice: ReturnType<typeof userService>,
+export const AuthService = (
+  userservice: ReturnType<typeof UserService>,
   authRepo: AuthRepository,
 ) => ({
   login: async (credentials: AuthCredentials): Promise<AuthResult> => {
@@ -42,5 +43,16 @@ export const authService = (
     const user = await userservice.findByIdWithoutPassowrd(userId);
     if (!user) throw new Error("User Not Found");
     return user;
+  },
+  updatUser: async (input: UpdateUserData, userId: number) => {
+    const user = await userservice.findById(userId);
+    if (!user) throw new Error("User not found");
+    // check the unique is available
+    const hash = await authRepo.hashPassword(input.password);
+    const updated = await userservice.update(
+      { ...input, password: hash },
+      userId,
+    );
+    return updated;
   },
 });

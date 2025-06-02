@@ -5,7 +5,7 @@ export interface CreateUserData {
 }
 
 export interface UpdateUserData {
-  username?: string;
-  email?: string;
-  passwordHash?: string;
+  username: string;
+  email: string;
+  password: string;
 }

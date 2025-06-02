@@ -1,8 +1,13 @@
+import { Omit } from "@prisma/client/runtime/library";
 import { User } from "../../../generated/prisma";
-import { CreateUserData } from "./user.model";
+import { CreateUserData, UpdateUserData } from "./user.model";
 
 export type UserRepository = {
   create: (data: Omit<CreateUserData, "id">) => Promise<User | null>;
+  update: (
+    data: UpdateUserData,
+    userId: number,
+  ) => Promise<Omit<User, "passwordHash"> | null>;
   findById: (id: number) => Promise<User | null>;
   findByIdWithoutPassword: (
     id: number,
