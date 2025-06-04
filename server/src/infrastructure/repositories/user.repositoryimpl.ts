@@ -7,6 +7,7 @@ export const userRepositoryImpl: UserRepository = {
   create: async (data: CreateUserData): Promise<User | null> => {
     const user = await prisma.user.create({
       data: {
+        public_id: data.publicId,
         username: data.username,
         email: data.email,
         passwordHash: data.password,
@@ -21,6 +22,7 @@ export const userRepositoryImpl: UserRepository = {
     return await prisma.user.update({
       select: {
         id: true,
+        public_id: true,
         username: true,
         email: true,
         createdAt: true,
@@ -39,6 +41,21 @@ export const userRepositoryImpl: UserRepository = {
   findById: async (id: number): Promise<User | null> => {
     return await prisma.user.findUnique({ where: { id } });
   },
+  findByPublicId: async (
+    publicId: string,
+  ): Promise<Omit<User, "passwordHash"> | null> => {
+    return await prisma.user.findUnique({
+      where: { public_id: publicId },
+      select: {
+        id: true,
+        public_id: true,
+        username: true,
+        email: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  },
   findByUsername: async (username: string): Promise<User | null> => {
     return await prisma.user.findUnique({ where: { username } });
   },
@@ -55,6 +72,7 @@ export const userRepositoryImpl: UserRepository = {
       where: { id },
       select: {
         id: true,
+        public_id: true,
         username: true,
         email: true,
         createdAt: true,
