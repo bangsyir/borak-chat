@@ -35,4 +35,35 @@ friendshipRoutes.post(
   },
 );
 
+friendshipRoutes.get("/friend-request/incoming", authUser, async (c) => {
+  const currentUser = c.get("user");
+  // find all incoming list friend-request
+  // checking Variables : current user id, pending status
+  try {
+    const incomingList = await friendshipService.incomingList(currentUser.sub);
+    return c.json(
+      createSuccessResponse("succeess retrive incoming list", incomingList),
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      return c.json(createErrorResponse("somthing wrong", error.message));
+    }
+  }
+});
+
+friendshipRoutes.get("/friend-request/outgoing", authUser, async (c) => {
+  const currentUser = c.get("user");
+  // find all outgoing list friend-request
+  // checking Variables : current user id, pending status
+  try {
+    const incomingList = await friendshipService.outgoingList(currentUser.sub);
+    return c.json(
+      createSuccessResponse("succeess retrive incoming list", incomingList),
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      return c.json(createErrorResponse("somthing wrong", error.message));
+    }
+  }
+});
 export { friendshipRoutes };
