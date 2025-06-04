@@ -1,4 +1,5 @@
 export interface CreateUserData {
+  publicId: string;
   username: string;
   email?: string;
   password: string;

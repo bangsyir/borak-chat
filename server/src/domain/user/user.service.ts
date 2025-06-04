@@ -10,6 +10,10 @@ export const UserService = (repo: UserRepository) => ({
   ): Promise<Omit<User, "passwordHash"> | null> => repo.update(data, userId),
   getAll: (): Promise<User[]> => repo.findAll(),
   findById: (id: number): Promise<User | null> => repo.findById(id),
+  findByPublicId: (
+    publicId: string,
+  ): Promise<Omit<User, "passwordHash"> | null> =>
+    repo.findByPublicId(publicId),
   findByIdWithoutPassowrd: (
     id: number,
   ): Promise<Omit<User, "passwordHash"> | null> =>

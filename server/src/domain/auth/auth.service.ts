@@ -19,7 +19,7 @@ export const AuthService = (
     );
     if (!isValid) throw new Error("Invalid username or password");
 
-    const token = await authRepo.genereteToken(user.id);
+    const token = await authRepo.genereteToken(user.id, user.public_id);
     return { token };
   },
   register: async (input: CreateUserData): Promise<{ message: string }> => {
@@ -32,6 +32,7 @@ export const AuthService = (
     }
     const hashed = await authRepo.hashPassword(input.password);
     await userservice.create({
+      publicId: input.publicId,
       username: input.username,
       email: input.email,
       password: hashed,
