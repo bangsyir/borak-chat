@@ -17,13 +17,14 @@ import { AuthService } from "../../../domain/auth/auth.service";
 import { AuthRepositoryImpl } from "../../../infrastructure/repositories/auth.repositoryimpl";
 import { Prisma } from "../../../../generated/prisma";
 import { UpdateUserData } from "../../../domain/user/user.model";
+import { generatePublicId } from "../../../shared/utils/generateRandomId";
 
 // returning type from middleware
 type Variables = {
   validateLoginData: LoginParams;
   validateRegisterData: RegisterParams;
   validateUserUpdate: UpdateUserData;
-  userId: number;
+  user: { sub: number; publicId: string };
 };
 
 // initialize services
@@ -47,9 +48,12 @@ authRoutes.post("/login", validateLogin, async (c) => {
 
 authRoutes.post("/register", validateRegister, async (c) => {
   const validate = c.get("validateRegisterData");
-
+  const publicId = await generatePublicId();
+  if (!publicId) {
+    return c.json(createErrorResponse("failed to generate publicId"), 400);
+  }
   try {
-    await authservice.register(validate);
+    await authservice.register({ ...validate, publicId: publicId });
     return c.json(createSuccessResponse("you successful registered"));
   } catch (error: any) {
     return c.json(createErrorResponse(error?.message), 400);
@@ -57,9 +61,9 @@ authRoutes.post("/register", validateRegister, async (c) => {
 });
 
 authRoutes.get("/me", authUser, async (c) => {
-  const userId = c.get("userId");
+  const { sub } = c.get("user");
   try {
-    const user = await authservice.me(userId);
+    const user = await authservice.me(sub);
     return c.json(createSuccessResponse("success", user));
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -73,7 +77,7 @@ authRoutes.get("/me", authUser, async (c) => {
   }
 });
 authRoutes.put("/me", authUser, validateUserUpdate, async (c) => {
-  const userId = c.get("userId");
+  const currentUser = c.get("user");
   const validated = c.get("validateUserUpdate");
   try {
     const user = await authservice.updatUser(
@@ -82,7 +86,7 @@ authRoutes.put("/me", authUser, validateUserUpdate, async (c) => {
         email: validated.email,
         password: validated.password,
       },
-      userId,
+      currentUser.sub,
     );
     return c.json(createSuccessResponse("success", user));
   } catch (error) {
