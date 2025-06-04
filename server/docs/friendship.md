@@ -3,6 +3,7 @@
 ## Friend request api
 
 Endpoint : POST /api/friend-request
+
 Headers:
 
 - Authorization : Bearer jwt-token
@@ -11,7 +12,7 @@ Request Body:
 
 ```json
 {
-  "friend_id": 2
+  "friendId": 2
 }
 ```
 
@@ -106,7 +107,7 @@ Auth Response Error Body :
 
 ## Accept Friend Request API
 
-Endpoint: PUT /api/firend-request/{request_token}/accept
+Endpoint: PUT /api/friend-request/{request_token}/accept
 
 Headers:
 
