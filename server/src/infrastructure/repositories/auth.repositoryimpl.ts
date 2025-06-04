@@ -1,7 +1,5 @@
-//import * as jwt from "jsonwebtoken";
 import { sign } from "hono/jwt";
 import { AuthRepository } from "../../domain/auth/auth.repository";
-//import { hash, verify } from "argon2";
 
 export const AuthRepositoryImpl: AuthRepository = {
   hashPassword: async (plain) =>
@@ -12,9 +10,13 @@ export const AuthRepositoryImpl: AuthRepository = {
     }),
   comparePassword: async (plain, hash) =>
     await Bun.password.verify(plain, hash),
-  genereteToken: async (userId) =>
+  genereteToken: async (userId, publicId) =>
     await sign(
-      { sub: userId, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 60 * 2 },
+      {
+        sub: userId,
+        publicId: publicId,
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 60 * 2,
+      },
       Bun.env.JWT_SECRET!,
       "HS256",
     ),
