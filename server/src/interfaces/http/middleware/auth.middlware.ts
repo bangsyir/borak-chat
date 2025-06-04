@@ -91,10 +91,13 @@ export const validateUserUpdate = createMiddleware(async (c, next) => {
 export const authUser = createMiddleware(async (c, next) => {
   const token = c.req.header("Authorization")?.split(" ")[1];
   if (!token) {
-    return c.json(createErrorResponse("Credential not found"), 401);
+    return c.json(createErrorResponse("Invalid Credentials"), 401);
   }
   const payload = await verify(token, Bun.env.JWT_SECRET!);
-  c.set("userId", payload?.sub);
+  if (payload.sub === undefined || payload.publicId === undefined) {
+    return c.json(createErrorResponse("Invalid Credentials"), 401);
+  }
+  c.set("user", { sub: payload.sub, publicId: payload.publicId });
   return next();
 });
 
