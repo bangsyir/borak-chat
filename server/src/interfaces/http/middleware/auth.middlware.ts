@@ -71,7 +71,7 @@ export const validateRegister = createMiddleware(async (c, next) => {
     );
   }
   c.set("validateRegisterData", result.data);
-  return next();
+  await next();
 });
 
 export const validateUserUpdate = createMiddleware(async (c, next) => {
@@ -84,7 +84,7 @@ export const validateUserUpdate = createMiddleware(async (c, next) => {
     );
   }
   c.set("validateUserUpdate", result.data);
-  return next();
+  await next();
 });
 
 // authentication middleware
@@ -98,7 +98,7 @@ export const authUser = createMiddleware(async (c, next) => {
     return c.json(createErrorResponse("Invalid Credentials"), 401);
   }
   c.set("user", { sub: payload.sub, publicId: payload.publicId });
-  return next();
+  await next();
 });
 
 export type LoginParams = z.infer<typeof loginSchema>;
