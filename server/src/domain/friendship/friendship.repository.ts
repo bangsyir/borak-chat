@@ -1,4 +1,9 @@
-import { IncomingListType, OutgoingListType } from "./friendship.model";
+import { Friendship } from "../../../generated/prisma";
+import {
+  FriendlistListType,
+  IncomingListType,
+  OutgoingListType,
+} from "./friendship.model";
 
 export type FriendshipRespository = {
   create: (
@@ -7,4 +12,7 @@ export type FriendshipRespository = {
   ) => Promise<Response | Error | undefined>;
   findIncomingList: (userId: number) => Promise<IncomingListType[]>;
   findOutgoingList: (userId: number) => Promise<OutgoingListType[]>;
+  findToken: (token: string) => Promise<Pick<Friendship, "id"> | null>;
+  updateStatus: (token: string, status: string) => void;
+  friendList: (userId: number, status: string) => Promise<FriendlistListType[]>;
 };

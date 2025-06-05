@@ -1,5 +1,10 @@
-import { IncomingListType, OutgoingListType } from "./friendship.model";
+import {
+  FriendlistListType,
+  IncomingListType,
+  OutgoingListType,
+} from "./friendship.model";
 import { FriendshipRespository } from "./friendship.repository";
+import { Friendship } from "../../../generated/prisma";
 
 export const FriedshipService = (repo: FriendshipRespository) => ({
   create: (
@@ -11,4 +16,12 @@ export const FriedshipService = (repo: FriendshipRespository) => ({
     repo.findIncomingList(userId),
   outgoingList: (userId: number): Promise<OutgoingListType[]> =>
     repo.findOutgoingList(userId),
+  findToken: (token: string): Promise<Pick<Friendship, "id"> | null> =>
+    repo.findToken(token),
+  updateStatus: (token: string, status: string): void =>
+    repo.updateStatus(token, status),
+  getFriendList: (
+    userId: number,
+    status: string,
+  ): Promise<FriendlistListType[]> => repo.friendList(userId, status),
 });

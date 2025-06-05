@@ -51,4 +51,42 @@ export const FriendshipRepositoryImpl: FriendshipRespository = {
     });
     return incomingList;
   },
+  findToken: async (token) => {
+    return await prisma.friendship.findFirst({
+      where: {
+        token: token,
+      },
+      select: {
+        id: true,
+      },
+    });
+  },
+  updateStatus: async (token, status) => {
+    await prisma.friendship.update({
+      where: {
+        token: token,
+      },
+      data: {
+        status: status,
+        token: "",
+      },
+    });
+  },
+  friendList: async (userId: number, status: string) => {
+    return await prisma.friendship.findMany({
+      where: {
+        AND: [{ requesterId: userId }, { status: status }],
+      },
+      select: {
+        status: true,
+        createdAt: true,
+        requestee: {
+          select: {
+            public_id: true,
+            username: true,
+          },
+        },
+      },
+    });
+  },
 };

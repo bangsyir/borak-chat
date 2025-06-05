@@ -20,3 +20,12 @@ export type OutgoingListType = {
     username: string;
   };
 };
+
+export type FriendlistListType = {
+  status: string;
+  createdAt: Date;
+  requestee: {
+    public_id: string;
+    username: string;
+  };
+};

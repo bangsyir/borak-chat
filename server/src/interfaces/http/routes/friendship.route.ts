@@ -66,4 +66,68 @@ friendshipRoutes.get("/friend-request/outgoing", authUser, async (c) => {
     }
   }
 });
+
+friendshipRoutes.put(
+  "/friend-request/:requestToken/accept",
+  authUser,
+  async (c) => {
+    // get request token from URL params
+    const token = c.req.param("requestToken");
+
+    // chech and update
+    // return the response
+    try {
+      const tokenExist = await friendshipService.findToken(token);
+      if (!tokenExist) {
+        throw new Error("Token not found");
+      }
+      friendshipService.updateStatus(token, "accepted");
+      return c.json(createSuccessResponse("Request friend accepted"));
+    } catch (error) {
+      if (error instanceof Error) {
+        return c.json(createSuccessResponse(error.message), 400);
+      }
+    }
+  },
+);
+
+friendshipRoutes.put(
+  "/friend-request/:requestToken/reject",
+  authUser,
+  async (c) => {
+    // get request token from URL params
+    const token = c.req.param("requestToken");
+
+    // chech and update
+    // return the response
+    try {
+      const tokenExist = await friendshipService.findToken(token);
+      if (!tokenExist) {
+        throw new Error("Token not found");
+      }
+      friendshipService.updateStatus(token, "rejected");
+      return c.json(createSuccessResponse("Request friend rejected"));
+    } catch (error) {
+      if (error instanceof Error) {
+        return c.json(createSuccessResponse(error.message), 400);
+      }
+    }
+  },
+);
+
+friendshipRoutes.get("/friends", authUser, async (c) => {
+  // get current user id
+  const currentUser = c.get("user");
+  try {
+    const friendList = await friendshipService.getFriendList(
+      currentUser.sub,
+      "accepted",
+    );
+    return c.json(createSuccessResponse("success retrive friend", friendList));
+  } catch (error) {
+    if (error instanceof Error) {
+      return c.json(createErrorResponse(error.message), 400);
+    }
+  }
+});
 export { friendshipRoutes };
