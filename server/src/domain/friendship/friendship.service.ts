@@ -16,6 +16,8 @@ export const FriedshipService = (repo: FriendshipRespository) => ({
     repo.findIncomingList(userId),
   outgoingList: (userId: number): Promise<OutgoingListType[]> =>
     repo.findOutgoingList(userId),
+  find: (requesteeId: number): Promise<Friendship | null> =>
+    repo.findFriend(requesteeId),
   findToken: (token: string): Promise<Pick<Friendship, "id"> | null> =>
     repo.findToken(token),
   updateStatus: (token: string, status: string): void =>

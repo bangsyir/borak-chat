@@ -3,8 +3,11 @@ import { UserService } from "../../../domain/user/user.service";
 import { userRepositoryImpl } from "../../../infrastructure/repositories/user.repositoryimpl";
 import { createMiddleware } from "hono/factory";
 import { createErrorResponse } from "../../../shared/utils/response.util";
+import { FriedshipService } from "../../../domain/friendship/friendship.service";
+import { FriendshipRepositoryImpl } from "../../../infrastructure/repositories/friendsip.repositoryimpl";
 
 const userService = UserService(userRepositoryImpl);
+const friendshipService = FriedshipService(FriendshipRepositoryImpl);
 
 export const checkFrienshipSchema = z.object({
   friendPublicId: z.string().min(10),
@@ -26,6 +29,8 @@ export const requestFriendValidation = createMiddleware(async (c, next) => {
       400,
     );
   }
+
+  // find requstee
   const requestee = await userService.findByPublicId(
     result.data.friendPublicId,
   );
@@ -37,6 +42,16 @@ export const requestFriendValidation = createMiddleware(async (c, next) => {
       404,
     );
   }
+  // check if friendship is available and reject next request
+  const friendExist = await friendshipService.find(requestee.id);
+  if (friendExist) {
+    return c.json(
+      createErrorResponse(
+        `${requestee.username} is already on you friend list`,
+      ),
+      400,
+    );
+  }
   c.set("requesteeId", requestee.id);
-  return next();
+  await next();
 });

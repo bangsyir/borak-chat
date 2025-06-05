@@ -89,4 +89,11 @@ export const FriendshipRepositoryImpl: FriendshipRespository = {
       },
     });
   },
+  findFriend: async (requesteeId: number) => {
+    return await prisma.friendship.findFirst({
+      where: {
+        requesteeId: requesteeId,
+      },
+    });
+  },
 };
