@@ -3,6 +3,7 @@ import { logger } from "hono/logger";
 import { authRoutes } from "./interfaces/http/routes/auth.route";
 import { prettyJSON } from "hono/pretty-json";
 import { friendshipRoutes } from "./interfaces/http/routes/friendship.route";
+import { messagesRoutes } from "./interfaces/http/routes/messages.route";
 
 const app = new Hono();
 
@@ -10,6 +11,7 @@ app.use("*", prettyJSON());
 app.use(logger());
 app.route("/api/auth", authRoutes);
 app.route("/api", friendshipRoutes);
+app.route("/api", messagesRoutes);
 app.get("/", (c) => {
   return c.text("Hello Hono!");
 });
