@@ -3,7 +3,7 @@ import { CreateUserData, UpdateUserData } from "../../domain/user/user.model";
 import { UserRepository } from "../../domain/user/user.repository";
 import { prisma } from "../db/db";
 
-export const userRepositoryImpl: UserRepository = {
+export const UserRepositoryImpl: UserRepository = {
   create: async (data: CreateUserData): Promise<User | null> => {
     const user = await prisma.user.create({
       data: {
