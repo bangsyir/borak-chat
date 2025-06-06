@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { authUser } from "../middleware/auth.middlware";
+import { authMiddleware } from "../middleware/auth.middlware";
 import { MessagesService } from "../../../domain/messages/messages.service";
 import { MessagesRepositoryImpl } from "../../../infrastructure/repositories/messages.repositoryImpl";
 import {
@@ -17,7 +17,7 @@ const messagesService = MessagesService(MessagesRepositoryImpl);
 
 const messagesRoutes = new Hono<{ Variables: Variables }>();
 
-messagesRoutes.get("/messages/direct", authUser, async (c) => {
+messagesRoutes.get("/messages/direct", authMiddleware, async (c) => {
   // get current auth user
   const currentUser = c.get("user");
   // search with query params
@@ -36,13 +36,15 @@ messagesRoutes.get("/messages/direct", authUser, async (c) => {
 
 messagesRoutes.post(
   "/messages/direct",
-  authUser,
+  authMiddleware,
   sendMessagesValidation,
   async (c) => {
     // get current auth user
     const currentUser = c.get("user");
     // search with query params
     const withUser = Number(c.req.query("with"));
+    // check if friend status is accepted
+    //
     // get validated content
     const validated = c.get("createMessagesValidated");
     try {

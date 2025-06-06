@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { authUser } from "../middleware/auth.middlware";
+import { authMiddleware } from "../middleware/auth.middlware";
 import { requestFriendValidation } from "../middleware/frindship.midleware";
 import { FriedshipService } from "../../../domain/friendship/friendship.service";
 import { FriendshipRepositoryImpl } from "../../../infrastructure/repositories/friendsip.repositoryimpl";
@@ -19,7 +19,7 @@ const friendshipService = FriedshipService(FriendshipRepositoryImpl);
 
 friendshipRoutes.post(
   "/friend-request",
-  authUser,
+  authMiddleware,
   requestFriendValidation,
   async (c) => {
     const currentUser = c.get("user");
@@ -35,7 +35,7 @@ friendshipRoutes.post(
   },
 );
 
-friendshipRoutes.get("/friend-request/incoming", authUser, async (c) => {
+friendshipRoutes.get("/friend-request/incoming", authMiddleware, async (c) => {
   const currentUser = c.get("user");
   // find all incoming list friend-request
   // checking Variables : current user id, pending status
@@ -51,7 +51,7 @@ friendshipRoutes.get("/friend-request/incoming", authUser, async (c) => {
   }
 });
 
-friendshipRoutes.get("/friend-request/outgoing", authUser, async (c) => {
+friendshipRoutes.get("/friend-request/outgoing", authMiddleware, async (c) => {
   const currentUser = c.get("user");
   // find all outgoing list friend-request
   // checking Variables : current user id, pending status
@@ -69,7 +69,7 @@ friendshipRoutes.get("/friend-request/outgoing", authUser, async (c) => {
 
 friendshipRoutes.put(
   "/friend-request/:requestToken/accept",
-  authUser,
+  authMiddleware,
   async (c) => {
     // get request token from URL params
     const token = c.req.param("requestToken");
@@ -93,7 +93,7 @@ friendshipRoutes.put(
 
 friendshipRoutes.put(
   "/friend-request/:requestToken/reject",
-  authUser,
+  authMiddleware,
   async (c) => {
     // get request token from URL params
     const token = c.req.param("requestToken");
@@ -115,7 +115,7 @@ friendshipRoutes.put(
   },
 );
 
-friendshipRoutes.get("/friends", authUser, async (c) => {
+friendshipRoutes.get("/friends", authMiddleware, async (c) => {
   // get current user id
   const currentUser = c.get("user");
   try {

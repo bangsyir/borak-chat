@@ -88,7 +88,7 @@ export const validateUserUpdate = createMiddleware(async (c, next) => {
 });
 
 // authentication middleware
-export const authUser = createMiddleware(async (c, next) => {
+export const authMiddleware = createMiddleware(async (c, next) => {
   const token = c.req.header("Authorization")?.split(" ")[1];
   if (!token) {
     return c.json(createErrorResponse("Invalid Credentials"), 401);

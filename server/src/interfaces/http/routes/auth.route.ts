@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import {
-  authUser,
+  authMiddleware,
   LoginParams,
   RegisterParams,
   validateLogin,
@@ -60,7 +60,7 @@ authRoutes.post("/register", validateRegister, async (c) => {
   }
 });
 
-authRoutes.get("/me", authUser, async (c) => {
+authRoutes.get("/me", authMiddleware, async (c) => {
   const { sub } = c.get("user");
   try {
     const user = await authservice.me(sub);
@@ -76,7 +76,7 @@ authRoutes.get("/me", authUser, async (c) => {
     }
   }
 });
-authRoutes.put("/me", authUser, validateUserUpdate, async (c) => {
+authRoutes.put("/me", authMiddleware, validateUserUpdate, async (c) => {
   const currentUser = c.get("user");
   const validated = c.get("validateUserUpdate");
   try {
