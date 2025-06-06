@@ -6,7 +6,7 @@ import {
 import { FriendshipRespository } from "./friendship.repository";
 import { Friendship } from "../../../generated/prisma";
 
-export const FriedshipService = (repo: FriendshipRespository) => ({
+export const FriendshipService = (repo: FriendshipRespository) => ({
   create: (
     requesterId: number,
     requesteeId: number,
