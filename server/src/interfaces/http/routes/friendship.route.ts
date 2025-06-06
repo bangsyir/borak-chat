@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { authMiddleware } from "../middleware/auth.middlware";
 import { requestFriendValidation } from "../middleware/frindship.midleware";
-import { FriedshipService } from "../../../domain/friendship/friendship.service";
+import { FriendshipService } from "../../../domain/friendship/friendship.service";
 import { FriendshipRepositoryImpl } from "../../../infrastructure/repositories/friendsip.repositoryimpl";
 import {
   createErrorResponse,
@@ -15,7 +15,7 @@ type Variables = {
 
 const friendshipRoutes = new Hono<{ Variables: Variables }>();
 
-const friendshipService = FriedshipService(FriendshipRepositoryImpl);
+const friendshipService = FriendshipService(FriendshipRepositoryImpl);
 
 friendshipRoutes.post(
   "/friend-request",

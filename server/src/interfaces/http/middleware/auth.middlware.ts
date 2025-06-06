@@ -3,10 +3,10 @@ import { createErrorResponse } from "../../../shared/utils/response.util";
 import { createMiddleware } from "hono/factory";
 import { verify } from "hono/jwt";
 import { UserService } from "../../../domain/user/user.service";
-import { userRepositoryImpl } from "../../../infrastructure/repositories/user.repositoryimpl";
+import { UserRepositoryImpl } from "../../../infrastructure/repositories/user.repositoryimpl";
 
 // initialize services
-const userService = UserService(userRepositoryImpl);
+const userService = UserService(UserRepositoryImpl);
 
 export const loginSchema = z.object({
   username: z.string().min(5),

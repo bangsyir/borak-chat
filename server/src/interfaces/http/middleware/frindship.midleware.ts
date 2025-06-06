@@ -1,13 +1,13 @@
 import { z } from "zod";
 import { UserService } from "../../../domain/user/user.service";
-import { userRepositoryImpl } from "../../../infrastructure/repositories/user.repositoryimpl";
+import { UserRepositoryImpl } from "../../../infrastructure/repositories/user.repositoryimpl";
 import { createMiddleware } from "hono/factory";
 import { createErrorResponse } from "../../../shared/utils/response.util";
-import { FriedshipService } from "../../../domain/friendship/friendship.service";
+import { FriendshipService } from "../../../domain/friendship/friendship.service";
 import { FriendshipRepositoryImpl } from "../../../infrastructure/repositories/friendsip.repositoryimpl";
 
-const userService = UserService(userRepositoryImpl);
-const friendshipService = FriedshipService(FriendshipRepositoryImpl);
+const userService = UserService(UserRepositoryImpl);
+const friendshipService = FriendshipService(FriendshipRepositoryImpl);
 
 export const checkFrienshipSchema = z.object({
   friendPublicId: z.string().min(10),

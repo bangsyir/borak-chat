@@ -8,7 +8,7 @@ import {
   validateUserUpdate,
 } from "../middleware/auth.middlware";
 import { UserService } from "../../../domain/user/user.service";
-import { userRepositoryImpl } from "../../../infrastructure/repositories/user.repositoryimpl";
+import { UserRepositoryImpl } from "../../../infrastructure/repositories/user.repositoryimpl";
 import {
   createErrorResponse,
   createSuccessResponse,
@@ -29,7 +29,7 @@ type Variables = {
 
 // initialize services
 const authservice = AuthService(
-  UserService(userRepositoryImpl),
+  UserService(UserRepositoryImpl),
   AuthRepositoryImpl,
 );
 
