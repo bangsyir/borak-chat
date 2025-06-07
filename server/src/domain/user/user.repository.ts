@@ -1,21 +1,19 @@
-import { Omit } from "@prisma/client/runtime/library";
-import { User } from "../../../generated/prisma";
-import { CreateUserData, UpdateUserData } from "./user.model";
+import { CreateUserData, UpdateUserData, UserType } from "./user.model";
 
 export type UserRepository = {
-  create: (data: CreateUserData) => Promise<User | null>;
+  create: (data: CreateUserData) => Promise<UserType | null>;
   update: (
     data: UpdateUserData,
     userId: number,
-  ) => Promise<Omit<User, "passwordHash"> | null>;
-  findById: (id: number) => Promise<User | null>;
+  ) => Promise<Omit<UserType, "passwordHash"> | null>;
+  findById: (id: number) => Promise<UserType | null>;
   findByPublicId: (
     publicId: string,
-  ) => Promise<Omit<User, "passwordHash"> | null>;
+  ) => Promise<Omit<UserType, "passwordHash"> | null>;
   findByIdWithoutPassword: (
     id: number,
-  ) => Promise<Omit<User, "passwordHash"> | null>;
-  findByUsername: (username: string) => Promise<User | null>;
-  findByEmail: (email: string) => Promise<User | null>;
-  findAll: () => Promise<User[]>;
+  ) => Promise<Omit<UserType, "passwordHash"> | null>;
+  findByUsername: (username: string) => Promise<UserType | null>;
+  findByEmail: (email: string) => Promise<UserType | null>;
+  findAll: () => Promise<UserType[]>;
 };

@@ -1,6 +1,12 @@
-import { DirectMessage } from "../../../generated/prisma";
-
-export type GetDirectMessageType = Pick<
-  DirectMessage,
-  "id" | "content" | "isRead" | "createdAt"
-> & { sender: { username: string } } & { receiver: { username: string } };
+export type GetDirectMessageType = {
+  id: number;
+  content: string;
+  isRead: boolean;
+  createdAt: Date;
+  sender: {
+    username: string;
+  };
+  receiver: {
+    username: string;
+  };
+};

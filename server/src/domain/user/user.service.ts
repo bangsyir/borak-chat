@@ -1,24 +1,25 @@
-import { User } from "../../../generated/prisma";
-import { CreateUserData, UpdateUserData } from "./user.model";
+import { CreateUserData, UpdateUserData, UserType } from "./user.model";
 import { UserRepository } from "./user.repository";
 
 export const UserService = (repo: UserRepository) => ({
-  create: (data: CreateUserData): Promise<User | null> => repo.create(data),
+  create: (data: CreateUserData): Promise<UserType | null> => repo.create(data),
   update: (
     data: UpdateUserData,
     userId: number,
-  ): Promise<Omit<User, "passwordHash"> | null> => repo.update(data, userId),
-  getAll: (): Promise<User[]> => repo.findAll(),
-  findById: (id: number): Promise<User | null> => repo.findById(id),
+  ): Promise<Omit<UserType, "passwordHash"> | null> =>
+    repo.update(data, userId),
+  getAll: (): Promise<UserType[]> => repo.findAll(),
+  findById: (id: number): Promise<UserType | null> => repo.findById(id),
   findByPublicId: (
     publicId: string,
-  ): Promise<Omit<User, "passwordHash"> | null> =>
+  ): Promise<Omit<UserType, "passwordHash"> | null> =>
     repo.findByPublicId(publicId),
   findByIdWithoutPassowrd: (
     id: number,
-  ): Promise<Omit<User, "passwordHash"> | null> =>
+  ): Promise<Omit<UserType, "passwordHash"> | null> =>
     repo.findByIdWithoutPassword(id),
-  findByUsername: (username: string): Promise<User | null> =>
+  findByUsername: (username: string): Promise<UserType | null> =>
     repo.findByUsername(username),
-  findByEmail: (email: string): Promise<User | null> => repo.findByEmail(email),
+  findByEmail: (email: string): Promise<UserType | null> =>
+    repo.findByEmail(email),
 });

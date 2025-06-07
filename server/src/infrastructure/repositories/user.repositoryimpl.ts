@@ -1,10 +1,13 @@
-import { User } from "../../../generated/prisma";
-import { CreateUserData, UpdateUserData } from "../../domain/user/user.model";
+import {
+  CreateUserData,
+  UpdateUserData,
+  UserType,
+} from "../../domain/user/user.model";
 import { UserRepository } from "../../domain/user/user.repository";
 import { prisma } from "../db/db";
 
 export const UserRepositoryImpl: UserRepository = {
-  create: async (data: CreateUserData): Promise<User | null> => {
+  create: async (data: CreateUserData): Promise<UserType | null> => {
     const user = await prisma.user.create({
       data: {
         public_id: data.publicId,
@@ -18,7 +21,7 @@ export const UserRepositoryImpl: UserRepository = {
   update: async (
     data: UpdateUserData,
     userId: number,
-  ): Promise<Omit<User, "passwordHash">> => {
+  ): Promise<Omit<UserType, "passwordHash">> => {
     return await prisma.user.update({
       select: {
         id: true,
@@ -38,12 +41,12 @@ export const UserRepositoryImpl: UserRepository = {
       },
     });
   },
-  findById: async (id: number): Promise<User | null> => {
+  findById: async (id: number): Promise<UserType | null> => {
     return await prisma.user.findUnique({ where: { id } });
   },
   findByPublicId: async (
     publicId: string,
-  ): Promise<Omit<User, "passwordHash"> | null> => {
+  ): Promise<Omit<UserType, "passwordHash"> | null> => {
     return await prisma.user.findUnique({
       where: { public_id: publicId },
       select: {
@@ -56,18 +59,18 @@ export const UserRepositoryImpl: UserRepository = {
       },
     });
   },
-  findByUsername: async (username: string): Promise<User | null> => {
+  findByUsername: async (username: string): Promise<UserType | null> => {
     return await prisma.user.findUnique({ where: { username } });
   },
-  findByEmail: async (email: string): Promise<User | null> => {
+  findByEmail: async (email: string): Promise<UserType | null> => {
     return await prisma.user.findFirst({ where: { email } });
   },
-  findAll: async (): Promise<User[]> => {
+  findAll: async (): Promise<UserType[]> => {
     return await prisma.user.findMany();
   },
   findByIdWithoutPassword: async (
     id: number,
-  ): Promise<Omit<User, "passwordHash"> | null> => {
+  ): Promise<Omit<UserType, "passwordHash"> | null> => {
     return await prisma.user.findFirst({
       where: { id },
       select: {

@@ -1,9 +1,7 @@
-import { CreateUserData, UpdateUserData } from "../user/user.model";
+import { CreateUserData, UpdateUserData, UserType } from "../user/user.model";
 import { UserService } from "../user/user.service";
 import { AuthCredentials, AuthResult } from "./auth.model";
 import { type AuthRepository } from "./auth.repository";
-import { User } from "../../../generated/prisma";
-import { Omit } from "@prisma/client/runtime/library";
 
 export const AuthService = (
   userservice: ReturnType<typeof UserService>,
@@ -40,7 +38,7 @@ export const AuthService = (
 
     return { message: "success" };
   },
-  me: async (userId: number): Promise<Omit<User, "passwordHash">> => {
+  me: async (userId: number): Promise<Omit<UserType, "passwordHash">> => {
     const user = await userservice.findByIdWithoutPassowrd(userId);
     if (!user) throw new Error("User Not Found");
     return user;

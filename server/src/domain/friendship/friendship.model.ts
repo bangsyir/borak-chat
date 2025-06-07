@@ -29,3 +29,13 @@ export type FriendlistListType = {
     username: string;
   };
 };
+
+export type FriendshipType = {
+  id: number;
+  token?: string | null;
+  requesterId: number;
+  requesteeId: number;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
