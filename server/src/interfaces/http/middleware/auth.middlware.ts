@@ -64,13 +64,36 @@ export const validateRegister = createMiddleware(async (c, next) => {
 
 export const validateUserUpdate = createMiddleware(async (c, next) => {
   const data = await c.req.json();
-  const result = await userUpdateSchema.safeParseAsync(data);
+  const result = userUpdateSchema.safeParse(data);
   if (!result.success) {
     return c.json(
       createErrorResponse("Error", result.error.flatten().fieldErrors),
       400,
     );
   }
+
+  const customErrors: Record<string, string[]> = {};
+  // check user unique
+  if (result.data.username) {
+    const usernameExist = await userService.findByUsername(
+      result.data.username,
+    );
+    if (usernameExist) {
+      customErrors.username = ["Username is already taken"];
+    }
+  }
+  if (result.data.email) {
+    const emailExist = await userService.findByEmail(result.data.email);
+    if (emailExist) {
+      customErrors.email = ["Email is already taken"];
+    }
+  }
+  if (Object.keys(customErrors).length > 0) {
+    return c.json(
+      createErrorResponse("Fields error", mergeFieldErrors({}, customErrors)),
+    );
+  }
+
   c.set("validateUserUpdate", result.data);
   await next();
 });

@@ -7,7 +7,7 @@ export interface CreateUserData {
 
 export interface UpdateUserData {
   username: string;
-  email: string;
+  email?: string;
   password: string;
 }
 

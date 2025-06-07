@@ -5,10 +5,7 @@ import { UserService } from "../../../domain/user/user.service";
 import { UserRepositoryImpl } from "../../../infrastructure/repositories/user.repositoryimpl";
 import { FriendshipRepositoryImpl } from "../../../infrastructure/repositories/friendsip.repositoryimpl";
 import { FriendshipService } from "../../../domain/friendship/friendship.service";
-
-const CreateMessageSchema = z.object({
-  content: z.string().min(1),
-});
+import { CreateMessageSchema } from "../../../domain/messages/messages.schema";
 
 const userService = UserService(UserRepositoryImpl);
 const friendService = FriendshipService(FriendshipRepositoryImpl);

@@ -5,13 +5,10 @@ import { createMiddleware } from "hono/factory";
 import { createErrorResponse } from "../../../shared/utils/response.util";
 import { FriendshipService } from "../../../domain/friendship/friendship.service";
 import { FriendshipRepositoryImpl } from "../../../infrastructure/repositories/friendsip.repositoryimpl";
+import { checkFrienshipSchema } from "../../../domain/friendship/friendship.schema";
 
 const userService = UserService(UserRepositoryImpl);
 const friendshipService = FriendshipService(FriendshipRepositoryImpl);
-
-export const checkFrienshipSchema = z.object({
-  friendPublicId: z.string().min(10),
-});
 
 export const requestFriendValidation = createMiddleware(async (c, next) => {
   const currentUser = c.get("user");
