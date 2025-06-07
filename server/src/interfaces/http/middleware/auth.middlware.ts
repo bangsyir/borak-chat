@@ -4,46 +4,15 @@ import { createMiddleware } from "hono/factory";
 import { verify } from "hono/jwt";
 import { UserService } from "../../../domain/user/user.service";
 import { UserRepositoryImpl } from "../../../infrastructure/repositories/user.repositoryimpl";
+import {
+  loginSchema,
+  registerSchema,
+  userUpdateSchema,
+} from "../../../domain/user/user.schema";
+import { mergeFieldErrors } from "../../../shared/utils/mergeFieldErrors";
 
 // initialize services
 const userService = UserService(UserRepositoryImpl);
-
-export const loginSchema = z.object({
-  username: z.string().min(5),
-  password: z.string().min(8),
-});
-
-export const registerSchema = z.object({
-  username: z.string().min(5),
-  email: z.string().email().optional(),
-  password: z.string().min(8),
-});
-
-// check availableity user inside zod (username, email)
-export const userUpdateSchema = registerSchema
-  .partial()
-  .superRefine(async ({ username, email }, ctx) => {
-    if (username !== undefined) {
-      const usernameExist = await userService.findByUsername(username);
-      if (usernameExist) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "This username is already taken",
-          path: ["username"],
-        });
-      }
-    }
-    if (email !== undefined) {
-      const usernameExist = await userService.findByEmail(email);
-      if (usernameExist) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "This email is already taken",
-          path: ["email"],
-        });
-      }
-    }
-  });
 
 // middleware business logic
 export const validateLogin = createMiddleware(async (c, next) => {
@@ -64,10 +33,29 @@ export const validateRegister = createMiddleware(async (c, next) => {
   const data = await c.req.json();
   const result = registerSchema.safeParse(data);
 
+  const customErrors: Record<string, string[]> = {};
+
   if (!result.success) {
     return c.json(
-      createErrorResponse("input error", result.error.flatten().fieldErrors),
+      createErrorResponse("Fields error", result.error.flatten().fieldErrors),
       400,
+    );
+  }
+
+  // check user unique
+  const usernameExist = await userService.findByUsername(result.data.username);
+  if (usernameExist) {
+    customErrors.username = ["Username is already taken"];
+  }
+  if (result.data.email) {
+    const emailExist = await userService.findByEmail(result.data.email);
+    if (emailExist) {
+      customErrors.email = ["Email is already taken"];
+    }
+  }
+  if (Object.keys(customErrors).length > 0) {
+    return c.json(
+      createErrorResponse("Fields error", mergeFieldErrors({}, customErrors)),
     );
   }
   c.set("validateRegisterData", result.data);
