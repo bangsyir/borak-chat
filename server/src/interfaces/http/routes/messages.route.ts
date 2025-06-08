@@ -78,7 +78,7 @@ messagesRoutes.post(
   },
 );
 messagesRoutes.put(
-  "/messages/direct/:friendId",
+  "/messages/direct/:friendId/read",
   friendValidation,
   async (c) => {
     // get both requester_id and requestee_id
