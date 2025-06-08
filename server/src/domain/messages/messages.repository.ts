@@ -11,4 +11,5 @@ export type MessagesRespository = {
     receiverId: number,
     content: string,
   ) => Promise<Pick<DirectMessage, "receiverId" | "content">>;
+  updateRead: (senderId: number, receiverId: number) => Promise<any>;
 };

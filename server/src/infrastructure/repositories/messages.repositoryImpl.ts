@@ -5,7 +5,10 @@ export const MessagesRepositoryImpl: MessagesRespository = {
   getMessages: async (senderId, receiverId) => {
     return await prisma.directMessage.findMany({
       where: {
-        AND: [{ senderId: senderId }, { receiverId: receiverId }],
+        OR: [
+          { senderId: senderId, receiverId: receiverId },
+          { senderId: receiverId, receiverId: senderId },
+        ],
       },
       orderBy: {
         createdAt: "desc",
@@ -38,6 +41,14 @@ export const MessagesRepositoryImpl: MessagesRespository = {
       select: {
         receiverId: true,
         content: true,
+      },
+    });
+  },
+  updateRead: async (senderId, receiverId) => {
+    return await prisma.directMessage.updateMany({
+      where: { senderId: senderId, receiverId: receiverId, isRead: false },
+      data: {
+        isRead: true,
       },
     });
   },
