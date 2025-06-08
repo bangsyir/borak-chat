@@ -2,7 +2,7 @@
 
 ## Retrive Direct Messages API
 
-Endpoint: GET /api/messages/direct?with={user_id}
+Endpoint: GET /api/messages/direct/:friendId
 
 Headers:
 -Authorization : Bearer jwt_token
@@ -16,12 +16,25 @@ Response Success Body :
     {
       "user_id": 1,
       "content": "test message",
-      "createdAt": "1-3-2025"
+      "createdAt": "1-3-2025",
+      "sender": {
+                "username": "test1"
+      },
+      "receiver": {
+                "username": "test2"
+            },
     },
     {
       "user_id": 2,
       "content": "test message",
       "createdAt": "1-3-2025"
+            "sender": {
+                "username": "test1"
+      },
+      "receiver": {
+                "username": "test2"
+            },
+
     }
   ]
 }
@@ -38,7 +51,7 @@ Auth Response Error Body :
 
 ## Send direct message Api
 
-Endpoint: POST /api/messages/direct
+Endpoint: POST /api/messages/direct/:friendId
 
 Headers:
 -Authorization : Bearer jwt_token
@@ -48,7 +61,6 @@ Request Body:
 ```json
 {
   "content": "test message",
-  "receiver_id": 3
 }
 ```
 
@@ -76,7 +88,7 @@ Auth Response Error Body :
 
 ## Mark a direct message as read API
 
-Endpoint : PUT /api/messages/direct/{message_id}/read
+Endpoint : PUT /api/messages/direct/:friendId/read
 Headers :
 
 - Authorization : Bearer jwt_token
