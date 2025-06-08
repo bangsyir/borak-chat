@@ -83,4 +83,19 @@ export const UserRepositoryImpl: UserRepository = {
       },
     });
   },
+  isFriend: async (requesterId: number, requesteeId: number) => {
+    const isFriend = await prisma.friendship.findFirst({
+      where: {
+        status: "accepted",
+        OR: [
+          { requesterId: requesterId, requesteeId: requesteeId },
+          { requesterId: requesteeId, requesteeId: requesterId },
+        ],
+      },
+    });
+    if (isFriend === null) {
+      return false;
+    }
+    return true;
+  },
 };

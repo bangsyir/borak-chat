@@ -22,4 +22,6 @@ export const UserService = (repo: UserRepository) => ({
     repo.findByUsername(username),
   findByEmail: (email: string): Promise<UserType | null> =>
     repo.findByEmail(email),
+  isFriend: (requesterId: number, requesteeId: number): Promise<boolean> =>
+    repo.isFriend(requesterId, requesteeId),
 });

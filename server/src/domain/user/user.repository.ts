@@ -16,4 +16,5 @@ export type UserRepository = {
   findByUsername: (username: string) => Promise<UserType | null>;
   findByEmail: (email: string) => Promise<UserType | null>;
   findAll: () => Promise<UserType[]>;
+  isFriend: (requesterId: number, requesteeId: number) => Promise<boolean>;
 };
