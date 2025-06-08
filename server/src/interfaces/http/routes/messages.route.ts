@@ -6,7 +6,10 @@ import {
   createErrorResponse,
   createSuccessResponse,
 } from "../../../shared/utils/response.util";
-import { sendMessagesValidation } from "../middleware/messages.middleware";
+import {
+  friendValidation,
+  sendMessagesValidation,
+} from "../middleware/messages.middleware";
 import { UserService } from "../../../domain/user/user.service";
 import { UserRepositoryImpl } from "../../../infrastructure/repositories/user.repositoryimpl";
 
@@ -25,37 +28,31 @@ const messagesRoutes = new Hono<{ Variables: Variables }>();
 
 messagesRoutes.use(authMiddleware);
 
-messagesRoutes.use(async (c, next) => {
-  // get current auth user
-  const currentUser = c.get("user");
-  // search with query params
-  const publicFriendId = c.req.param("friendId");
-  if (publicFriendId === currentUser.publicId) {
-    return c.json(createErrorResponse("Cannot do action to yourself"));
-  }
-  await next();
-});
+messagesRoutes.get(
+  "/messages/direct/:friendId",
+  friendValidation,
+  async (c) => {
+    // get current auth user
+    const currentUser = c.get("user");
+    // search with query params
+    const friendId = c.req.param("friendId");
+    console.log(friendId);
 
-messagesRoutes.get("/messages/direct/:friendId", async (c) => {
-  // get current auth user
-  const currentUser = c.get("user");
-  // search with query params
-  const friendId = c.req.param("friendId");
-
-  // return message
-  const messages = await messagesService.getAll(currentUser.sub, friendId);
-  if (messages.ok === false) {
-    return c.json(createErrorResponse(messages.message), messages.statusCode);
-  }
-  return c.json(
-    createSuccessResponse("success retrive messages", messages.data),
-    messages.statusCode,
-  );
-});
+    // return message
+    const messages = await messagesService.getAll(currentUser.sub, friendId);
+    if (messages.ok === false) {
+      return c.json(createErrorResponse(messages.message), messages.statusCode);
+    }
+    return c.json(
+      createSuccessResponse("success retrive messages", messages.data),
+      messages.statusCode,
+    );
+  },
+);
 
 messagesRoutes.post(
   "/messages/direct/:friendId",
-  authMiddleware,
+  friendValidation,
   sendMessagesValidation,
   async (c) => {
     // get current auth user
@@ -80,25 +77,29 @@ messagesRoutes.post(
     );
   },
 );
-messagesRoutes.put("/messages/direct/:friendId", async (c) => {
-  // get both requester_id and requestee_id
-  const currentUser = c.get("user");
-  const requesteeId = c.req.param("friendId"); // this is publicId
-  // find messages if isRead is false
-  // please make sure validation inside services
-  // update message status
-  const updateRead = await messagesService.updateRead(
-    currentUser.sub,
-    requesteeId,
-  );
-  // return error
-  if (updateRead?.ok === false) {
-    return c.json(
-      createErrorResponse(updateRead?.message),
-      updateRead.statusCode,
+messagesRoutes.put(
+  "/messages/direct/:friendId",
+  friendValidation,
+  async (c) => {
+    // get both requester_id and requestee_id
+    const currentUser = c.get("user");
+    const publicId = c.req.param("friendId"); // this is publicId
+    // find messages if isRead is false
+    // please make sure validation inside services
+    // update message status
+    const updateRead = await messagesService.updateRead(
+      currentUser.sub,
+      publicId,
     );
-  }
-  // return sucess
-  return c.json(createSuccessResponse("you read all message"));
-});
+    // return error
+    if (updateRead?.ok === false) {
+      return c.json(
+        createErrorResponse(updateRead?.message),
+        updateRead.statusCode,
+      );
+    }
+    // return sucess
+    return c.json(createSuccessResponse("you read all message"));
+  },
+);
 export { messagesRoutes };

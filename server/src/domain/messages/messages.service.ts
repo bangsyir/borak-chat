@@ -78,11 +78,11 @@ export const MessagesService = (
     }
   },
   updateRead: async (
-    senderId: number,
-    friendId: string,
+    receiverId: number,
+    friendPublicId: string,
   ): Promise<ResultType<any, any>> => {
     try {
-      const friend = await userService.findByPublicId(friendId);
+      const friend = await userService.findByPublicId(friendPublicId);
       if (!friend) {
         return {
           ok: false,
@@ -91,7 +91,7 @@ export const MessagesService = (
         };
         //return createErrorResponse("Friend not found");
       }
-      const result = await messagesRepo.updateRead(senderId, friend.id);
+      const result = await messagesRepo.updateRead(friend.id, receiverId);
       if (result.count === 0) {
         return {
           ok: false,

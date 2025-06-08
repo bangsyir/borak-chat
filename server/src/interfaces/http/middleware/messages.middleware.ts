@@ -37,3 +37,16 @@ export const sendMessagesValidation = createMiddleware(async (c, next) => {
   c.set("createMessagesValidated", result.data);
   await next();
 });
+
+// validate if friendId === current public user id
+export const friendValidation = createMiddleware(async (c, next) => {
+  // get current auth user
+  const currentUser = c.get("user");
+  // search with query params
+  const publicFriendId = c.req.param("friendId");
+  console.log(publicFriendId, currentUser.publicId);
+  if (publicFriendId === currentUser.publicId) {
+    return c.json(createErrorResponse("Cannot do action to yourself"));
+  }
+  await next();
+});
