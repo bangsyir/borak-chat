@@ -8,7 +8,7 @@ export const MessagesService = (
   userService: ReturnType<typeof UserService>,
 ) => ({
   getAll: async (
-    senderId: number,
+    receiverId: number,
     friendId: string,
   ): Promise<ResultType<any, any>> => {
     try {
@@ -20,7 +20,7 @@ export const MessagesService = (
           statusCode: 404,
         };
       }
-      const isFriend = await userService.isFriend(senderId, friend.id);
+      const isFriend = await userService.isFriend(receiverId, friend.id);
       if (isFriend === false) {
         return {
           ok: false,
@@ -28,7 +28,7 @@ export const MessagesService = (
           statusCode: 400,
         };
       }
-      const data = await messagesRepo.getMessages(senderId, friend.id);
+      const data = await messagesRepo.getMessages(receiverId, friend.id);
       return {
         ok: true,
         data: data,
@@ -43,7 +43,7 @@ export const MessagesService = (
     }
   },
   send: async (
-    senderId: number,
+    receiverId: number,
     publicFriendId: string,
     content: string,
   ): Promise<
@@ -60,7 +60,7 @@ export const MessagesService = (
       }
 
       const sendMessage = await messagesRepo.sendMessage(
-        senderId,
+        receiverId,
         friend.id,
         content,
       );
@@ -78,8 +78,8 @@ export const MessagesService = (
     }
   },
   updateRead: async (
-    receiverId: number,
     friendPublicId: string,
+    receiverId: number,
   ): Promise<ResultType<any, any>> => {
     try {
       const friend = await userService.findByPublicId(friendPublicId);
@@ -89,8 +89,8 @@ export const MessagesService = (
           message: "Friend not found",
           statusCode: 404,
         };
-        //return createErrorResponse("Friend not found");
       }
+      //console.log(friend.id, receiverId);
       const result = await messagesRepo.updateRead(friend.id, receiverId);
       if (result.count === 0) {
         return {
