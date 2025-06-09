@@ -58,7 +58,7 @@ friendshipRoutes.get("/friend-request/outgoing", authMiddleware, async (c) => {
   try {
     const incomingList = await friendshipService.outgoingList(currentUser.sub);
     return c.json(
-      createSuccessResponse("succeess retrive incoming list", incomingList),
+      createSuccessResponse("succeess retrive outgoing list", incomingList),
     );
   } catch (error) {
     if (error instanceof Error) {
