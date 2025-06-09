@@ -36,7 +36,6 @@ messagesRoutes.get(
     const currentUser = c.get("user");
     // search with query params
     const friendId = c.req.param("friendId");
-    console.log(friendId);
 
     // return message
     const messages = await messagesService.getAll(currentUser.sub, friendId);
@@ -83,13 +82,14 @@ messagesRoutes.put(
   async (c) => {
     // get both requester_id and requestee_id
     const currentUser = c.get("user");
-    const publicId = c.req.param("friendId"); // this is publicId
+    const publicId = c.req.param("friendId");
+    // this is publicId
     // find messages if isRead is false
     // please make sure validation inside services
     // update message status
     const updateRead = await messagesService.updateRead(
-      currentUser.sub,
       publicId,
+      currentUser.sub,
     );
     // return error
     if (updateRead?.ok === false) {
