@@ -1,5 +1,4 @@
 import { createMiddleware } from "hono/factory";
-import { z } from "zod";
 import { createErrorResponse } from "../../../shared/utils/response.util";
 import { UserService } from "../../../domain/user/user.service";
 import { UserRepositoryImpl } from "../../../infrastructure/repositories/user.repositoryimpl";
@@ -44,7 +43,6 @@ export const friendValidation = createMiddleware(async (c, next) => {
   const currentUser = c.get("user");
   // search with query params
   const publicFriendId = c.req.param("friendId");
-  console.log(publicFriendId, currentUser.publicId);
   if (publicFriendId === currentUser.publicId) {
     return c.json(createErrorResponse("Cannot do action to yourself"));
   }
