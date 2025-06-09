@@ -73,21 +73,12 @@ export const FriendshipRepositoryImpl: FriendshipRespository = {
     });
   },
   friendList: async (userId: number, status: string) => {
-    return await prisma.friendship.findMany({
-      where: {
-        AND: [{ requesterId: userId }, { status: status }],
-      },
-      select: {
-        status: true,
-        createdAt: true,
-        requestee: {
-          select: {
-            public_id: true,
-            username: true,
-          },
-        },
-      },
-    });
+    return await prisma.$queryRaw`
+    SELECT DISTINCT u2.public_id as publicId, u2.username as username, f.created_at as createdAt FROM users as u1
+JOIN friendships as f ON u1.id = f.requestee_id OR u1.id = f.requester_id
+JOIN users as u2 ON f.requestee_id = u2.id OR f.requester_id = u2.id
+WHERE u1.id = ${userId} AND NOT u2.id = ${userId} AND status = ${status};
+`;
   },
   findFriend: async (requesteeId: number) => {
     return await prisma.friendship.findFirst({
