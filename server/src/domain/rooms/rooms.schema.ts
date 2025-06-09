@@ -1,0 +1,6 @@
+import { z } from "zod";
+
+export const createRoomsSchema = z.object({
+  name: z.string().min(1),
+  isPrivate: z.boolean().default(false),
+});
