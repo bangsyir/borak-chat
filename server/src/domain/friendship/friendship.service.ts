@@ -1,5 +1,5 @@
 import {
-  FriendlistListType,
+  FriendListType,
   FriendshipType,
   IncomingListType,
   OutgoingListType,
@@ -22,8 +22,6 @@ export const FriendshipService = (repo: FriendshipRespository) => ({
     repo.findToken(token),
   updateStatus: (token: string, status: string): void =>
     repo.updateStatus(token, status),
-  getFriendList: (
-    userId: number,
-    status: string,
-  ): Promise<FriendlistListType[]> => repo.friendList(userId, status),
+  getFriendList: (userId: number, status: string): Promise<FriendListType[]> =>
+    repo.friendList(userId, status),
 });

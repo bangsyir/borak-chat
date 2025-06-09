@@ -1,5 +1,5 @@
 import {
-  FriendlistListType,
+  FriendListType,
   FriendshipType,
   IncomingListType,
   OutgoingListType,
@@ -15,5 +15,5 @@ export type FriendshipRespository = {
   findFriend: (requesteeId: number) => Promise<FriendshipType | null>;
   findToken: (token: string) => Promise<Pick<FriendshipType, "id"> | null>;
   updateStatus: (token: string, status: string) => void;
-  friendList: (userId: number, status: string) => Promise<FriendlistListType[]>;
+  friendList: (userId: number, status: string) => Promise<FriendListType[]>;
 };

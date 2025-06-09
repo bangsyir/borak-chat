@@ -21,13 +21,10 @@ export type OutgoingListType = {
   };
 };
 
-export type FriendlistListType = {
-  status: string;
+export type FriendListType = {
+  publicId: string;
+  username: string;
   createdAt: Date;
-  requestee: {
-    public_id: string;
-    username: string;
-  };
 };
 
 export type FriendshipType = {
