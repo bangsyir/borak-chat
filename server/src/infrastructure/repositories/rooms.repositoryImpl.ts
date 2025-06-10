@@ -24,21 +24,22 @@ export const RoomsRepositoryImpl: RoomsRepository = {
   },
   getRooms: async (userId) => {
     return await prisma.$queryRaw`
-WITH LatestGroupMessage AS (
-	SELECT
-	rm.room_id,
-	rm.content,
-	rm.created_at,
-	ROW_NUMBER() OVER (PARTITION BY rm.room_id ORDER BY rm.created_at DESC) as rn
-	FROM room_messages as rm
-)
-SELECT DISTINCT r.public_id AS publicId, r.name AS name, lgm.content AS lastMessage, lgm.created_at AS lastMessageCreated FROM room_members as rm
-JOIN rooms AS r ON rm.user_id = r.creator_id
-LEFT JOIN LatestGroupMessage as lgm ON r.id = lgm.room_id AND lgm.rn = 1
-WHERE user_id = ${userId}
-ORDER BY lgm.created_at DESC NULLS LAST
-;
-`;
+        WITH LatestGroupMessage AS (
+          SELECT
+          rm.room_id,
+          rm.content,
+          rm.created_at,
+          ROW_NUMBER() OVER (PARTITION BY rm.room_id ORDER BY rm.created_at DESC) as rn
+          FROM room_messages as rm
+        )
+        SELECT DISTINCT r.public_id AS publicId, r.name AS name, lgm.content AS lastMessage, lgm.created_at AS lastMessageCreated
+        FROM room_members as rm
+        JOIN rooms AS r ON rm.user_id = r.creator_id
+        LEFT JOIN LatestGroupMessage as lgm ON r.id = lgm.room_id AND lgm.rn = 1
+        WHERE user_id = ${userId}
+        ORDER BY lgm.created_at DESC NULLS LAST
+        ;
+    `;
   },
   isMember: async (userId, roomId) => {
     return await prisma.roomMember.findFirst({
