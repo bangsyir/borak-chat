@@ -1,3 +1,4 @@
+import { RoomMessagesResponse } from "../../domain/rooms/rooms.model";
 import { RoomsRepository } from "../../domain/rooms/rooms.repositry";
 import { prisma } from "../db/db";
 
@@ -71,5 +72,59 @@ export const RoomsRepositoryImpl: RoomsRepository = {
       JOIN users as u ON u.id = rm.user_id
       WHERE rm.room_id = ${roomId};
     `;
+  },
+  findRoom: async (publicRoomId) => {
+    return await prisma.room.findFirst({
+      where: {
+        publicId: publicRoomId,
+      },
+      select: {
+        id: true,
+        publicId: true,
+        name: true,
+      },
+    });
+  },
+  getRoomMessages: async (roomId) => {
+    const roomMessages = await prisma.roomMessage.findMany({
+      where: {
+        roomId: roomId,
+      },
+      select: {
+        id: true,
+        content: true,
+        sender: {
+          select: {
+            username: true,
+          },
+        },
+        createdAt: true,
+      },
+    });
+    const messages: RoomMessagesResponse[] = roomMessages.map((item) => ({
+      id: item.id,
+      content: item.content,
+      sender: item.sender.username,
+      createdAt: item.createdAt,
+    }));
+    return messages;
+  },
+  sendMessage: async (userId, roomId, content) => {
+    return await prisma.roomMessage.create({
+      data: {
+        senderId: userId,
+        roomId,
+        content,
+        statuses: {
+          create: {
+            roomId,
+            userId,
+          },
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
   },
 };

@@ -3,7 +3,8 @@ import {
   FindMemberResponse,
   ListRoomsResponse,
   MembersListResponse,
-  RoomDetailsRespomse,
+  RoomDetailsResponse,
+  RoomMessagesResponse,
 } from "./rooms.model";
 
 export type RoomsRepository = {
@@ -17,6 +18,13 @@ export type RoomsRepository = {
     userId: number,
     roomId: number,
   ) => Promise<FindMemberResponse | null>;
-  getDetails: (publicRoomId: string) => Promise<RoomDetailsRespomse | null>;
+  getDetails: (publicRoomId: string) => Promise<RoomDetailsResponse | null>;
   getMembers: (RoomId: number) => Promise<MembersListResponse[]>;
+  findRoom: (publicRoomId: string) => Promise<RoomDetailsResponse | null>;
+  getRoomMessages: (roomId: number) => Promise<RoomMessagesResponse[]>;
+  sendMessage: (
+    userId: number,
+    roomId: number,
+    content: string,
+  ) => Promise<{ id: number } | null>;
 };

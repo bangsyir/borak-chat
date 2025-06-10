@@ -1,10 +1,10 @@
 import { Prisma } from "../../../generated/prisma";
 import { ResultType } from "../core/shared/response.util";
 import {
-  GetRoomsDetailsResponse,
   ListRoomsResponse,
   MembersListResponse,
   RoomDetailsRespomse,
+  RoomMessagesResponse,
 } from "./rooms.model";
 import { RoomsRepository } from "./rooms.repositry";
 
@@ -91,6 +91,70 @@ export const RoomsService = (repo: RoomsRepository) => ({
           members: members,
         },
         statusCode: 200,
+      };
+    } catch (error: any) {
+      return {
+        ok: false,
+        message: error.message,
+        statusCode: 500,
+      };
+    }
+  },
+  getMessages: async (
+    userId: number,
+    publicRoomId: string,
+  ): Promise<ResultType<RoomMessagesResponse[], any>> => {
+    const room = await repo.findRoom(publicRoomId);
+    if (!room) {
+      return {
+        ok: false,
+        message: "room not found",
+        statusCode: 404,
+      };
+    }
+    const isMember = await repo.isMember(userId, room.id);
+    if (!isMember) {
+      return {
+        ok: false,
+        message: "You are not member",
+        statusCode: 400,
+      };
+    }
+    const messages = await repo.getRoomMessages(room.id);
+    return {
+      ok: true,
+      message: "success",
+      data: messages,
+      statusCode: 200,
+    };
+  },
+  sendMessage: async (
+    userId: number,
+    publicRoomId: string,
+    content: string,
+  ): Promise<ResultType<any, any>> => {
+    const room = await repo.findRoom(publicRoomId);
+    if (!room) {
+      return {
+        ok: false,
+        message: "room not found",
+        statusCode: 404,
+      };
+    }
+    const isMember = await repo.isMember(userId, room.id);
+    if (!isMember) {
+      return {
+        ok: false,
+        message: "You are not member",
+        statusCode: 400,
+      };
+    }
+    try {
+      await repo.sendMessage(userId, room.id, content);
+      return {
+        ok: true,
+        message: "success send message",
+        statusCode: 201,
       };
     } catch (error: any) {
       return {

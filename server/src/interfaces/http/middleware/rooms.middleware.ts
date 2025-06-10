@@ -1,5 +1,8 @@
 import { createMiddleware } from "hono/factory";
-import { createRoomsSchema } from "../../../domain/rooms/rooms.schema";
+import {
+  createRoomsSchema,
+  sendMessageToRoomSchema,
+} from "../../../domain/rooms/rooms.schema";
 import { createErrorResponse } from "../../../shared/utils/response.util";
 
 export const createRoomsValidation = createMiddleware(async (c, next) => {
@@ -12,5 +15,18 @@ export const createRoomsValidation = createMiddleware(async (c, next) => {
     );
   }
   c.set("createRoomsValidated", result.data);
+  await next();
+});
+
+export const sendMessageToRoomValidation = createMiddleware(async (c, next) => {
+  const data = await c.req.json();
+  const result = sendMessageToRoomSchema.safeParse(data);
+  if (!result.success) {
+    return c.json(
+      createErrorResponse("Field Error", result.error.flatten().fieldErrors),
+      400,
+    );
+  }
+  c.set("sendMessageValidated", result.data);
   await next();
 });

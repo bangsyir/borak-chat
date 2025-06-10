@@ -17,8 +17,15 @@ export type MembersListResponse = {
   username: string;
 };
 
-export type RoomDetailsRespomse = {
+export type RoomDetailsResponse = {
   id: number;
   publicId: string;
   name: string;
+};
+
+export type RoomMessagesResponse = {
+  id: number;
+  content: string;
+  sender: string;
+  createdAt: Date;
 };
