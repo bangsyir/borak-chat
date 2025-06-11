@@ -30,3 +30,16 @@ export const sendMessageToRoomValidation = createMiddleware(async (c, next) => {
   c.set("sendMessageValidated", result.data);
   await next();
 });
+
+export const sendInvitaionRoomValidation = createMiddleware(async (c, next) => {
+  const data = await c.req.json();
+  if (data.friendId === undefined || data.friendId === "") {
+    return c.json(
+      createErrorResponse("Field Error", {
+        errors: { friendId: ["Id is required"] },
+      }),
+    );
+  }
+  c.set("friendId", data.friendId);
+  await next();
+});

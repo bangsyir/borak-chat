@@ -11,10 +11,12 @@ export type ListRoomsResponse = {
 };
 export type FindMemberResponse = {
   id: number;
+  isAdmin: boolean;
 };
 export type MembersListResponse = {
   publicId: string;
   username: string;
+  isAdmin: boolean;
 };
 
 export type RoomDetailsResponse = {

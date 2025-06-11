@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { authMiddleware } from "../middleware/auth.middlware";
 import {
   createRoomsValidation,
+  sendInvitaionRoomValidation,
   sendMessageToRoomValidation,
 } from "../middleware/rooms.middleware";
 import { RoomsService } from "../../../domain/rooms/rooms.service";
@@ -10,14 +11,20 @@ import {
   createErrorResponse,
   createSuccessResponse,
 } from "../../../shared/utils/response.util";
+import { UserService } from "../../../domain/user/user.service";
+import { UserRepositoryImpl } from "../../../infrastructure/repositories/user.repositoryimpl";
 
 type Variables = {
   user: { sub: number; publicId: string };
   createRoomsValidated: { name: string; isPrivate: boolean };
   sendMessageValidated: { content: string };
+  friendId: string;
 };
 
-const roomsService = RoomsService(RoomsRepositoryImpl);
+const roomsService = RoomsService(
+  RoomsRepositoryImpl,
+  UserService(UserRepositoryImpl),
+);
 
 const roomsRoutes = new Hono<{ Variables: Variables }>();
 
@@ -112,4 +119,46 @@ roomsRoutes.post(
   },
 );
 
+roomsRoutes.post(
+  "/rooms/:roomId/invitation",
+  sendInvitaionRoomValidation,
+  async (c) => {
+    // const get current user
+    const currentUser = c.get("user");
+    const publicRoomId = c.req.param("roomId");
+    const friendId = c.get("friendId");
+
+    if (!publicRoomId) {
+      return c.json(createErrorResponse("invalid room id"), 400);
+    }
+    // handle create invitaion
+    // verification if currentUser is rooms admin
+    const result = await roomsService.invitation(
+      currentUser.sub,
+      friendId,
+      publicRoomId,
+    );
+
+    // return error
+    if (!result.ok) {
+      return c.json(createErrorResponse(result.message), result.statusCode);
+    }
+    // return success
+    return c.json(createSuccessResponse(result.message), result.statusCode);
+  },
+);
+//roomsRoutes.put("/rooms/:roomId/messages/:messageId/read", async (c) => {
+//  // get current user
+//  const currentUser = c.get("user");
+//  // get roomId
+//  const roomId = c.req.param("roomId");
+//  // get last messageId
+//  const lastMessageId = c.req.param("messageId");
+//  // execute room service
+//
+//  // return error
+//  // return success
+//  return c.json();
+//});
+//
 export { roomsRoutes };

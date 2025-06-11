@@ -15,6 +15,11 @@ export const RoomsRepositoryImpl: RoomsRepository = {
             isAdmin: true,
           },
         },
+        UserRoomStatus: {
+          create: {
+            userId: creatorId,
+          },
+        },
       },
       select: {
         creatorId: true,
@@ -35,7 +40,7 @@ export const RoomsRepositoryImpl: RoomsRepository = {
         )
         SELECT DISTINCT r.public_id AS publicId, r.name AS name, lgm.content AS lastMessage, lgm.created_at AS lastMessageCreated
         FROM room_members as rm
-        JOIN rooms AS r ON rm.user_id = r.creator_id
+        JOIN rooms AS r ON rm.room_id = r.id
         LEFT JOIN LatestGroupMessage as lgm ON r.id = lgm.room_id AND lgm.rn = 1
         WHERE user_id = ${userId}
         ORDER BY lgm.created_at DESC NULLS LAST
@@ -50,6 +55,7 @@ export const RoomsRepositoryImpl: RoomsRepository = {
       },
       select: {
         id: true,
+        isAdmin: true,
       },
     });
   },
@@ -67,7 +73,7 @@ export const RoomsRepositoryImpl: RoomsRepository = {
   },
   getMembers: async (roomId) => {
     return await prisma.$queryRaw`
-      SELECT u.public_id as publicId, u.username as username
+      SELECT u.public_id as publicId, u.username as username, rm.is_admin as isAdmin
       FROM room_members as rm
       JOIN users as u ON u.id = rm.user_id
       WHERE rm.room_id = ${roomId};
@@ -100,6 +106,9 @@ export const RoomsRepositoryImpl: RoomsRepository = {
         },
         createdAt: true,
       },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
     const messages: RoomMessagesResponse[] = roomMessages.map((item) => ({
       id: item.id,
@@ -124,6 +133,39 @@ export const RoomsRepositoryImpl: RoomsRepository = {
       },
       select: {
         id: true,
+      },
+    });
+  },
+  createInvitation: async (userId: number, roomId: number) => {
+    await prisma.room.update({
+      where: {
+        id: roomId,
+      },
+      data: {
+        members: {
+          create: {
+            userId: userId,
+          },
+        },
+        UserRoomStatus: {
+          create: {
+            userId: userId,
+          },
+        },
+      },
+    });
+    return;
+  },
+  updateRoomMessageRead: async (userId, roomId, lastMessageId) => {
+    return await prisma.userRoomStatus.update({
+      where: {
+        userId_roomId: {
+          userId,
+          roomId,
+        },
+      },
+      data: {
+        lastReadMessageId: lastMessageId,
       },
     });
   },

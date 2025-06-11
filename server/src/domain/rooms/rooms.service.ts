@@ -1,14 +1,19 @@
+import { OK } from "zod";
 import { Prisma } from "../../../generated/prisma";
 import { ResultType } from "../core/shared/response.util";
 import {
   ListRoomsResponse,
   MembersListResponse,
-  RoomDetailsRespomse,
+  RoomDetailsResponse,
   RoomMessagesResponse,
 } from "./rooms.model";
 import { RoomsRepository } from "./rooms.repositry";
+import { UserService } from "../user/user.service";
 
-export const RoomsService = (repo: RoomsRepository) => ({
+export const RoomsService = (
+  repo: RoomsRepository,
+  userService: ReturnType<typeof UserService>,
+) => ({
   create: async (
     creatorId: number,
     name: string,
@@ -60,7 +65,7 @@ export const RoomsService = (repo: RoomsRepository) => ({
     publicRoomId: string,
   ): Promise<
     ResultType<
-      Omit<RoomDetailsRespomse, "id"> & { members: MembersListResponse[] },
+      Omit<RoomDetailsResponse, "id"> & { members: MembersListResponse[] },
       null
     >
   > => {
@@ -104,29 +109,41 @@ export const RoomsService = (repo: RoomsRepository) => ({
     userId: number,
     publicRoomId: string,
   ): Promise<ResultType<RoomMessagesResponse[], any>> => {
-    const room = await repo.findRoom(publicRoomId);
-    if (!room) {
+    try {
+      const room = await repo.findRoom(publicRoomId);
+      if (!room) {
+        return {
+          ok: false,
+          message: "room not found",
+          statusCode: 404,
+        };
+      }
+      const isMember = await repo.isMember(userId, room.id);
+      if (!isMember) {
+        return {
+          ok: false,
+          message: "You are not member",
+          statusCode: 400,
+        };
+      }
+      const messages = await repo.getRoomMessages(room.id);
+
+      (async () => {
+        try {
+          await repo.updateRoomMessageRead(userId, room.id, messages[0].id);
+        } catch (error) {
+          throw new Error("failed to update read status");
+        }
+      })();
       return {
-        ok: false,
-        message: "room not found",
-        statusCode: 404,
+        ok: true,
+        message: "success",
+        data: messages,
+        statusCode: 200,
       };
+    } catch (error: any) {
+      return { ok: false, message: error.messages, statusCode: 500 };
     }
-    const isMember = await repo.isMember(userId, room.id);
-    if (!isMember) {
-      return {
-        ok: false,
-        message: "You are not member",
-        statusCode: 400,
-      };
-    }
-    const messages = await repo.getRoomMessages(room.id);
-    return {
-      ok: true,
-      message: "success",
-      data: messages,
-      statusCode: 200,
-    };
   },
   sendMessage: async (
     userId: number,
@@ -164,4 +181,101 @@ export const RoomsService = (repo: RoomsRepository) => ({
       };
     }
   },
+  invitation: async (
+    userId: number,
+    publicFriendId: string,
+    publicRoomId: string,
+  ): Promise<ResultType<null, null>> => {
+    const friend = await userService.findByPublicId(publicFriendId);
+    if (!friend) {
+      return {
+        ok: false,
+        message: "Friend not found",
+        statusCode: 400,
+      };
+    }
+    const room = await repo.findRoom(publicRoomId);
+    if (!room) {
+      return {
+        ok: false,
+        message: "room not found",
+        statusCode: 404,
+      };
+    }
+    // chekc if friend is room member
+    const isFriendIsMember = await repo.isMember(friend.id, room.id);
+
+    if (isFriendIsMember) {
+      return {
+        ok: false,
+        message: "this user is member",
+        statusCode: 401,
+      };
+    }
+    // check admin is member and isadmin
+    const isMember = await repo.isMember(userId, room.id);
+    if (!isMember) {
+      return {
+        ok: false,
+        message: "You are not member",
+        statusCode: 400,
+      };
+    }
+    if (!isMember.isAdmin) {
+      return {
+        ok: false,
+        message: "You not allowed to create invitaion",
+        statusCode: 401,
+      };
+    }
+    try {
+      await repo.createInvitation(friend.id, room.id);
+      return {
+        ok: false,
+        message: "Invitaion created",
+        statusCode: 201,
+      };
+    } catch (error: any) {
+      return {
+        ok: false,
+        message: error.message,
+        statusCode: 500,
+      };
+    }
+  },
+  //updateReadMessage: async (
+  //  userId: number,
+  //  publicRoomId: string,
+  //  lastMessagesId: number,
+  //) => {
+  //  try {
+  //    const room = await repo.findRoom(publicRoomId);
+  //    if (!room) {
+  //      return {
+  //        ok: false,
+  //        message: "room not found",
+  //        statusCode: 404,
+  //      };
+  //    }
+  //    const isMember = await repo.isMember(userId, room.id);
+  //    if (!isMember) {
+  //      return {
+  //        ok: false,
+  //        message: "You are not member",
+  //        statusCode: 400,
+  //      };
+  //    }
+  //    await repo.updateRoomMessageRead(userId, room.id, lastMessagesId);
+  //    return {
+  //      ok: true,
+  //      message: "success update the user",
+  //    };
+  //  } catch (error: any) {
+  //    return {
+  //      ok: false,
+  //      message: error.message,
+  //      statusCode: 500,
+  //    };
+  //  }
+  //},
 });
