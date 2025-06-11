@@ -27,8 +27,6 @@ model User {
   membership      RoomMember[]
   RoomMessage     RoomMessage[]
   roomStatuses    UserRoomStatus[]
-  invitations     Invitation[]     @relation("CreatedBy")
-  usedInvitations Invitation[]     @relation("UsedBy")
 
   @@map("users")
 }
@@ -73,7 +71,6 @@ model Room {
   members        RoomMember[]
   RoomMessage    RoomMessage[]
   UserRoomStatus UserRoomStatus[]
-  Invitation     Invitation[]
 
   @@map("rooms")
 }
@@ -107,7 +104,7 @@ model RoomMessage {
 model UserRoomStatus {
   userId            Int          @map("user_id")
   roomId            Int          @map("room_id")
-  lastReadMessageId Int          @map("last_read_message_id")
+  lastReadMessageId Int?         @map("last_read_message_id")
   updatedAt         DateTime     @updatedAt @map("updated_at")
   user              User         @relation(fields: [userId], references: [id])
   room              Room         @relation(fields: [roomId], references: [id])
@@ -115,20 +112,4 @@ model UserRoomStatus {
 
   @@id([userId, roomId])
   @@map("user_room_status")
-}
-
-model Invitation {
-  id        Int       @id @default(autoincrement())
-  roomId    Int       @map("room_id")
-  token     String
-  createdBy Int       @map("created_by")
-  createdAt DateTime  @default(now()) @map("created_at")
-  expiresAt DateTime  @map("expires_at")
-  usedBy    Int       @map("used_by")
-  usedAt    DateTime? @map("used_at")
-  room      Room      @relation(fields: [roomId], references: [id])
-  creator   User      @relation("CreatedBy", fields: [createdBy], references: [id])
-  user      User?     @relation("UsedBy", fields: [usedBy], references: [id])
-
-  @@map("invitations")
 }
