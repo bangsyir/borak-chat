@@ -21,6 +21,31 @@ export async function loader({ request }: Route.LoaderArgs) {
   );
 }
 
+export async function action({ request }: Route.ActionArgs) {
+  const formData = await request.formData();
+  const username = formData.get("username");
+  const email = formData.get("email");
+  const password = formData.get("password");
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  const data = {
+    username,
+    email,
+    password,
+  };
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await response.json();
+
+  return result;
+}
+
 export default function Register() {
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p10">

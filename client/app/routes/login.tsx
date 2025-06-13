@@ -41,7 +41,6 @@ export async function action({ request }: Route.ActionArgs) {
   });
 
   const result = await response.json();
-  console.log(result);
   if (!result.success) {
     return result;
   }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { cn } from "~/lib/utils";
 import {
   Card,
@@ -29,15 +29,15 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const fetcher = useFetcher();
-
+  const hasDisplayToast = useRef(false);
   React.useEffect(() => {
     if (fetcher?.data?.success === true) {
-      toast("Success", {
-        description: fetcher?.data?.message,
-        position: "top-center",
+      toast.success("Login Success", {
+        description: "welcome back, nice to see you again.",
       });
+      hasDisplayToast.current = true;
     }
-  }, [fetcher]);
+  }, [fetcher.data]);
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -66,7 +66,7 @@ export function LoginForm({
             <div className="flex flex-col gap-4">
               <div className="grid gap-3">
                 <Label htmlFor="username">Username</Label>
-                <div className="flex flex-col relative">
+                <div className="flex flex-col">
                   <Input
                     id="username"
                     name="username"

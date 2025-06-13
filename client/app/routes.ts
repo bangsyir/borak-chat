@@ -5,4 +5,5 @@ export default [
   route("/login", "routes/login.tsx"),
   route("/set-theme", "routes/set-theme.ts"),
   route("/register", "routes/register.tsx"),
+  route("/logout", "routes/logout.ts"),
 ] satisfies RouteConfig;

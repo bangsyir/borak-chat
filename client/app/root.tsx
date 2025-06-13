@@ -63,7 +63,7 @@ export function App() {
       </head>
       <body>
         <Outlet />
-        <Toaster />
+        <Toaster position="top-center" richColors />
         <ScrollRestoration />
         <Scripts />
       </body>
