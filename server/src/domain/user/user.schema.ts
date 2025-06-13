@@ -6,8 +6,14 @@ export const loginSchema = z.object({
 });
 
 export const registerSchema = z.object({
-  username: z.string().min(5),
-  email: z.string().email().optional(),
+  username: z
+    .string()
+    .trim()
+    .min(5)
+    .regex(/^[a-zA-Z0-9_-]+$/, {
+      message: "Username cannot contain spaces or special characters",
+    }),
+  email: z.string().optional().default(""),
   password: z.string().min(8),
 });
 
