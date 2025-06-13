@@ -1,7 +1,5 @@
 import { LoginForm } from "~/components/login-form";
 import type { Route } from "./+types/login";
-import React from "react";
-import { toast } from "sonner";
 import { data, redirect } from "react-router";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -11,10 +9,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     return redirect("/");
   }
   return data(
-    {
-      success: false,
-      message: session.get("error"),
-    },
+    {},
     {
       headers: {
         "Set-Cookie": await destroySession(session),
@@ -46,6 +41,7 @@ export async function action({ request }: Route.ActionArgs) {
   });
 
   const result = await response.json();
+  console.log(result);
   if (!result.success) {
     return result;
   }
@@ -57,19 +53,11 @@ export async function action({ request }: Route.ActionArgs) {
   });
 }
 
-export default function Login({ actionData }: Route.ComponentProps) {
-  React.useEffect(() => {
-    if (actionData?.success === false) {
-      toast("Opss somthing wrong", {
-        description: actionData.message,
-        position: "top-center",
-      });
-    }
-  }, [actionData]);
+export default function Login() {
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p10">
       <div className="w-full max-w-sm">
-        <LoginForm actiondata={actionData} />
+        <LoginForm />
       </div>
     </div>
   );
