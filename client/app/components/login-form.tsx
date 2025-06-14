@@ -13,7 +13,7 @@ import { Button } from "./ui/button";
 import { ModeToggle } from "./mode-toggle";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { AlertCircle, Loader2Icon } from "lucide-react";
-import { Link, useFetcher } from "react-router";
+import { Link, useFetcher, useNavigate } from "react-router";
 import { toast } from "sonner";
 
 export type LoginFormProps = {
@@ -30,11 +30,13 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   const fetcher = useFetcher();
   const hasDisplayToast = useRef(false);
+  const navigate = useNavigate();
   React.useEffect(() => {
     if (fetcher?.data?.success === true) {
       toast.success("Login Success", {
         description: "welcome back, nice to see you again.",
       });
+      navigate("/");
       hasDisplayToast.current = true;
     }
   }, [fetcher.data]);
