@@ -1,6 +1,7 @@
 import { LoginForm } from "~/components/login-form";
 import type { Route } from "./+types/login";
 import { data, redirect } from "react-router";
+import { parseJwt } from "~/lib/jwt.server";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { getSession, destroySession } = await import("~/lib/session.server");
@@ -44,7 +45,14 @@ export async function action({ request }: Route.ActionArgs) {
   if (!result.success) {
     return result;
   }
-  const sessionToken = { token: result.data.token };
+  const tokenParse = parseJwt(result.data.token);
+  const sessionToken = {
+    token: result.data.token,
+    user: {
+      username: tokenParse?.username,
+      email: tokenParse?.email,
+    },
+  };
   session.set("__session", sessionToken);
   const setCookie = await commitSession(session);
   return data(result, {

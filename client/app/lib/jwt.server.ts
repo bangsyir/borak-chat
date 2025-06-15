@@ -1,6 +1,8 @@
 interface JwtPayload {
   sub: number;
   publicId: string;
+  username: string;
+  email: string;
   exp?: number; // Expiration time (Unix timestamp in seconds)
   iat?: number; // Issued at
   [key: string]: any; // Allow custom claims

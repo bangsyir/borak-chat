@@ -14,10 +14,11 @@ import {
   useSidebar,
 } from "../ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { useFetcher, useNavigate } from "react-router";
+import { useFetcher, useLoaderData, useNavigate } from "react-router";
 import React, { useRef } from "react";
 import { toast } from "sonner";
 import { ChevronsUpDown, LogOutIcon, UserCircleIcon } from "lucide-react";
+import type { loader } from "~/routes/layout";
 
 export function NavUser({
   user,
@@ -28,6 +29,7 @@ export function NavUser({
     avatar: string;
   };
 }) {
+  const actionData = useLoaderData<typeof loader>();
   const { isMobile } = useSidebar();
 
   const fetcher = useFetcher();
@@ -62,13 +64,17 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground border"
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage src={user.avatar} alt={user.username} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarImage src={user.avatar} alt={actionData.user.username} />
+                <AvatarFallback className="rounded-lg uppercase">
+                  {actionData.user.username.slice(0, 2)}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.username}</span>
+                <span className="truncate font-medium">
+                  {actionData.user.username}
+                </span>
                 <span className="text-muted-foreground truncate text-xs">
-                  {user.email}
+                  {actionData.user.email}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
@@ -83,13 +89,20 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.username} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarImage
+                    src={user.avatar}
+                    alt={actionData.user?.username}
+                  />
+                  <AvatarFallback className="rounded-lg uppercase">
+                    {actionData.user.username.slice(0, 2)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.username}</span>
+                  <span className="truncate font-medium">
+                    {actionData.user.username}
+                  </span>
                   <span className="text-muted-foreground truncate text-xs">
-                    {user.email}
+                    {actionData.user.email}
                   </span>
                 </div>
               </div>

@@ -1,8 +1,13 @@
-import type React from "react";
-import { Outlet } from "react-router";
+import { Outlet, type LoaderFunctionArgs } from "react-router";
 import { AppSidebar } from "~/components/sidebar/app-sidebar";
 import { SiteHeader } from "~/components/sidebar/site-header";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const { getUser } = await import("~/lib/session.server");
+  const user = await getUser(request);
+  return { user };
+}
 
 export default function Layout() {
   return (
