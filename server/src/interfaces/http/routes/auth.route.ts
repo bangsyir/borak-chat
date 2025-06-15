@@ -24,7 +24,12 @@ type Variables = {
   validateLoginData: LoginParams;
   validateRegisterData: RegisterParams;
   validateUserUpdate: UpdateUserData;
-  user: { sub: number; publicId: string };
+  user: {
+    sub: number;
+    publicId: string;
+    username: string;
+    email: string | null;
+  };
 };
 
 // initialize services

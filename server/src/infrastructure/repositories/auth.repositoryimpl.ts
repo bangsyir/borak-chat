@@ -10,11 +10,13 @@ export const AuthRepositoryImpl: AuthRepository = {
     }),
   comparePassword: async (plain, hash) =>
     await Bun.password.verify(plain, hash),
-  genereteToken: async (userId, publicId) =>
+  genereteToken: async (userId, publicId, username, email) =>
     await sign(
       {
         sub: userId,
         publicId: publicId,
+        username: username,
+        email: email,
         exp: Math.floor(Date.now() / 1000) + 60 * 60 * 60 * 2,
       },
       Bun.env.JWT_SECRET!,
