@@ -27,8 +27,6 @@ type Variables = {
   user: {
     sub: number;
     publicId: string;
-    username: string;
-    email: string | null;
   };
 };
 

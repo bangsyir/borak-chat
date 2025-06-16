@@ -17,12 +17,7 @@ export const AuthService = (
     );
     if (!isValid) throw new Error("Invalid username or password");
 
-    const token = await authRepo.genereteToken(
-      user.id,
-      user.public_id,
-      user.username,
-      user?.email || "",
-    );
+    const token = await authRepo.genereteToken(user.id, user.public_id);
     return { token };
   },
   register: async (input: CreateUserData): Promise<{ message: string }> => {
@@ -43,10 +38,18 @@ export const AuthService = (
 
     return { message: "success" };
   },
-  me: async (userId: number): Promise<Omit<UserType, "passwordHash">> => {
+  me: async (
+    userId: number,
+  ): Promise<Omit<UserType, "id" | "passwordHash">> => {
     const user = await userservice.findByIdWithoutPassowrd(userId);
     if (!user) throw new Error("User Not Found");
-    return user;
+    return {
+      public_id: user.public_id,
+      username: user.username,
+      email: user.email,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   },
   updatUser: async (input: UpdateUserData, userId: number) => {
     const user = await userservice.findById(userId);
