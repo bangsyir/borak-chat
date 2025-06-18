@@ -35,7 +35,7 @@ export const validateRegister = createMiddleware(async (c, next) => {
 
   const customErrors: Record<string, string[]> = {};
 
-  if (!result.success) {
+  if (result.success === false) {
     return c.json(
       createErrorResponse("Fields error", result.error.flatten().fieldErrors),
       400,

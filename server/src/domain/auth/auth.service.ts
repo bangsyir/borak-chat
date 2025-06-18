@@ -23,10 +23,12 @@ export const AuthService = (
   register: async (input: CreateUserData): Promise<{ message: string }> => {
     const existUser = await userservice.findByUsername(input.username);
     if (existUser) throw new Error("User already exists");
-
     if (input.email !== undefined) {
-      const existEmail = await userservice.findByEmail(input.email);
-      if (existEmail) throw new Error("User already exists");
+      if (input.email !== "") {
+        console.log("hello from login");
+        const existEmail = await userservice.findByEmail(input.email);
+        if (existEmail) throw new Error("User already exists");
+      }
     }
     const hashed = await authRepo.hashPassword(input.password);
     await userservice.create({
