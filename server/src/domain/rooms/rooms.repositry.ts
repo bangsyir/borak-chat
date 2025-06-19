@@ -13,7 +13,7 @@ export type RoomsRepository = {
     name: string,
     isPrivate: boolean,
   ) => Promise<CreateRoomsResponse>;
-  getRooms: (userId: number) => Promise<ListRoomsResponse>;
+  getRooms: (userId: number) => Promise<ListRoomsResponse[]>;
   isMember: (
     userId: number,
     roomId: number,

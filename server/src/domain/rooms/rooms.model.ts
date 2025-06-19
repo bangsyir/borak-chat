@@ -8,6 +8,8 @@ export type ListRoomsResponse = {
   name: string;
   lastMessage?: string | null;
   lastMessageCreated?: Date | null;
+  totalMember: string;
+  isPrivate: boolean;
 };
 export type FindMemberResponse = {
   id: number;

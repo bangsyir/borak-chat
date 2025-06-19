@@ -32,16 +32,30 @@ export const RoomsRepositoryImpl: RoomsRepository = {
     return await prisma.$queryRaw`
         WITH LatestGroupMessage AS (
           SELECT
-          rm.room_id,
-          rm.content,
-          rm.created_at,
+            rm.room_id,
+            rm.content,
+            rm.created_at,
           ROW_NUMBER() OVER (PARTITION BY rm.room_id ORDER BY rm.created_at DESC) as rn
           FROM room_messages as rm
+        ),
+        RoomMemberCount AS (
+          SELECT
+            rm.room_id,
+            COUNT(DISTINCT rm.user_id) as totalMemberCount
+          FROM room_members as rm 
+          GROUP BY rm.room_id
         )
-        SELECT DISTINCT r.public_id AS publicId, r.name AS name, lgm.content AS lastMessage, lgm.created_at AS lastMessageCreated
+        SELECT DISTINCT 
+          r.public_id AS publicId, 
+          r.name AS name, 
+          lgm.content AS lastMessage, 
+          lgm.created_at AS lastMessageCreated,
+          rmc.totalMemberCount as totalMember,
+          r.is_private as isPrivate
         FROM room_members as rm
         JOIN rooms AS r ON rm.room_id = r.id
         LEFT JOIN LatestGroupMessage as lgm ON r.id = lgm.room_id AND lgm.rn = 1
+        LEFT JOIN RoomMemberCount as rmc ON r.id = rmc.room_id
         WHERE user_id = ${userId}
         ORDER BY lgm.created_at DESC NULLS LAST
         ;

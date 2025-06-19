@@ -43,13 +43,21 @@ export const RoomsService = (
   },
   getList: async (
     userId: number,
-  ): Promise<ResultType<ListRoomsResponse, any>> => {
+  ): Promise<ResultType<ListRoomsResponse[], any>> => {
     try {
       const rooms = await repo.getRooms(userId);
+      const result = rooms.map((item) => ({
+        publicId: item.publicId,
+        name: item.name,
+        lastMessage: item.lastMessage,
+        lastMessageCreated: item.lastMessageCreated,
+        totalMember: item.totalMember.toString(),
+        isPrivate: item.isPrivate,
+      }));
       return {
         ok: true,
         message: "success",
-        data: rooms,
+        data: result,
         statusCode: 200,
       };
     } catch (error: any) {
