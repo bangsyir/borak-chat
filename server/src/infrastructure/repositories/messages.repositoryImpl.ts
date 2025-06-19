@@ -1,48 +1,50 @@
+import { GetDirectMessageResponse } from "../../domain/messages/messages.model";
 import { MessagesRespository } from "../../domain/messages/messages.repository";
 import { prisma } from "../db/db";
 
 export const MessagesRepositoryImpl: MessagesRespository = {
-  getMessages: async (senderId, receiverId) => {
-    return await prisma.directMessage.findMany({
-      where: {
-        OR: [
-          { senderId: senderId, receiverId: receiverId },
-          { senderId: receiverId, receiverId: senderId },
-        ],
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      select: {
-        id: true,
-        content: true,
-        isRead: true,
-        createdAt: true,
-        sender: {
-          select: {
-            username: true,
-          },
-        },
-        receiver: {
-          select: {
-            username: true,
-          },
-        },
-      },
-    });
+  getMessages: async (currentUserId, friendId) => {
+    const messages = await prisma.$queryRaw<GetDirectMessageResponse[]>`
+      SELECT
+        dm.id,
+        dm.content,
+        dm.created_at,
+        dm.is_read,
+        sender.username as sender,
+        CASE
+          WHEN dm.sender_id = ${currentUserId} THEN TRUE
+          ELSE FALSE
+        END AS isOwn
+      FROM
+        direct_messages dm
+      JOIN users as sender ON sender.id = dm.sender_id
+      WHERE
+        (dm.sender_id = ${currentUserId} AND dm.receiver_id = ${friendId})
+        OR
+        (dm.sender_id = ${friendId} AND dm.receiver_id = ${currentUserId})
+      ORDER BY
+        dm.created_at ASC;
+    `;
+    return messages;
   },
   sendMessage: async (senderId, receiverId, content) => {
-    return await prisma.directMessage.create({
+    console.log("sendMessage");
+    const message = await prisma.directMessage.create({
       data: {
-        senderId,
-        receiverId,
-        content,
-      },
-      select: {
-        receiverId: true,
-        content: true,
+        senderId: senderId,
+        receiverId: receiverId,
+        content: content,
+        isRead: false,
       },
     });
+    return message;
+    //return await prisma.directMessage.create({
+    //  data: {
+    //    senderId,
+    //    receiverId,
+    //    content,
+    //  },
+    //});
   },
   updateRead: async (senderId, receiverId) => {
     return await prisma.directMessage.updateMany({

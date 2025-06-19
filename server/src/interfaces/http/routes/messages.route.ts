@@ -57,14 +57,14 @@ messagesRoutes.post(
     // get current auth user
     const currentUser = c.get("user");
     // search with query params
-    const publicFriendId = c.req.param("friendId");
+    const friendId = c.get("friendId");
     // check if friend status is accepted
     // get validated content
     const validated = c.get("createMessagesValidated");
     // create new message
     const result = await messagesService.send(
       currentUser.sub,
-      publicFriendId,
+      friendId,
       validated.content,
     );
     if (result.ok === false) {

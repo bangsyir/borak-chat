@@ -24,11 +24,11 @@ export const sendMessagesValidation = createMiddleware(async (c, next) => {
     return c.json(createErrorResponse("public id is needed"), 400);
   }
   // get public friend id
-  const user = await userService.findByPublicId(publicId);
-  if (!user) {
+  const friend = await userService.findByPublicId(publicId);
+  if (!friend) {
     return c.json(createErrorResponse("User not found"), 401);
   }
-  const isFriend = await friendService.find(user.id);
+  const isFriend = await friendService.find(friend.id);
   if (!isFriend || isFriend.status !== "accepted") {
     return c.json(createErrorResponse("you not friend ye"), 400);
   }

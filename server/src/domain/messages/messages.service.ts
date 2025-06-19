@@ -8,7 +8,7 @@ export const MessagesService = (
   userService: ReturnType<typeof UserService>,
 ) => ({
   getAll: async (
-    receiverId: number,
+    currentUserId: number,
     friendId: string,
   ): Promise<ResultType<any, any>> => {
     try {
@@ -20,7 +20,7 @@ export const MessagesService = (
           statusCode: 404,
         };
       }
-      const isFriend = await userService.isFriend(receiverId, friend.id);
+      const isFriend = await userService.isFriend(currentUserId, friend.id);
       if (isFriend === false) {
         return {
           ok: false,
@@ -28,13 +28,25 @@ export const MessagesService = (
           statusCode: 400,
         };
       }
-      const data = await messagesRepo.getMessages(receiverId, friend.id);
+      const result = await messagesRepo.getMessages(currentUserId, friend.id);
+      const messages = result.map((item) => ({
+        id: item.id,
+        content: item.content,
+        createdAt: item.created_at,
+        isRead: item.is_read,
+        sender: item.sender,
+        isOwn: Boolean(item.isOwn),
+      }));
+      const data = {
+        friendName: friend.username,
+        messages,
+      };
       return {
         ok: true,
         data: data,
         statusCode: 200,
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         ok: false,
         message: "something wrong",
@@ -43,14 +55,15 @@ export const MessagesService = (
     }
   },
   send: async (
-    receiverId: number,
-    publicFriendId: string,
+    currentUserId: number,
+    friendId: number,
     content: string,
   ): Promise<
     ResultType<Pick<DirectMessage, "receiverId" | "content">, any>
   > => {
+    console.log({ currentUserId, friendId, content });
     try {
-      const friend = await userService.findByPublicId(publicFriendId);
+      const friend = await userService.findById(friendId);
       if (!friend) {
         return {
           ok: false,
@@ -58,9 +71,8 @@ export const MessagesService = (
           statusCode: 404,
         };
       }
-
       const sendMessage = await messagesRepo.sendMessage(
-        receiverId,
+        currentUserId,
         friend.id,
         content,
       );
@@ -73,7 +85,8 @@ export const MessagesService = (
         },
         statusCode: 201,
       };
-    } catch (error) {
+    } catch (error: any) {
+      console.error(error);
       return { ok: false, message: "something wrong", statusCode: 500 };
     }
   },

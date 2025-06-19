@@ -1,11 +1,11 @@
 import { DirectMessage } from "../../../generated/prisma";
-import { GetDirectMessageType } from "./messages.model";
+import { GetDirectMessageResponse } from "./messages.model";
 
 export type MessagesRespository = {
   getMessages: (
-    senderId: number,
-    receiverId: number,
-  ) => Promise<GetDirectMessageType[]>;
+    currentUserId: number,
+    friendId: number,
+  ) => Promise<GetDirectMessageResponse[]>;
   sendMessage: (
     senderId: number,
     receiverId: number,

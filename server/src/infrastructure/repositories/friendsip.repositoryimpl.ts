@@ -92,10 +92,10 @@ export const FriendshipRepositoryImpl: FriendshipRespository = {
       WHERE u1.id = ${userId} AND NOT u2.id = ${userId} AND status = ${status};
     `;
   },
-  findFriend: async (requesteeId: number) => {
+  findFriend: async (friendId: number) => {
     return await prisma.friendship.findFirst({
       where: {
-        requesteeId: requesteeId,
+        OR: [{ requesteeId: friendId }, { requesterId: friendId }],
       },
     });
   },
