@@ -38,13 +38,6 @@ export const MessagesRepositoryImpl: MessagesRespository = {
       },
     });
     return message;
-    //return await prisma.directMessage.create({
-    //  data: {
-    //    senderId,
-    //    receiverId,
-    //    content,
-    //  },
-    //});
   },
   updateRead: async (senderId, receiverId) => {
     return await prisma.directMessage.updateMany({
