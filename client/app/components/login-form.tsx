@@ -36,7 +36,7 @@ export function LoginForm({
       toast.success("Login Success", {
         description: "welcome back, nice to see you again.",
       });
-      navigate("/");
+      navigate("/direct-message");
       hasDisplayToast.current = true;
     }
   }, [fetcher.data]);

@@ -1,28 +1,31 @@
-import { Outlet, type LoaderFunctionArgs } from "react-router";
-import { AppSidebar } from "~/components/sidebar/app-sidebar";
-import { SiteHeader } from "~/components/sidebar/site-header";
-import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
+import { data, Outlet, type LoaderFunctionArgs } from "react-router";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { getUser } = await import("~/lib/session.server");
-  const user = await getUser(request);
-  return { user };
+  const { destroySession, getToken } = await import("~/lib/session.server");
+  const { session, token } = await getToken(request);
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const result = await response.json();
+  if (result.success === false) {
+    return data(
+      {},
+      {
+        headers: {
+          "Set-Cookie": await destroySession(session),
+        },
+      },
+    );
+  }
+  return result;
 }
 
 export default function Layout() {
   return (
-    <SidebarProvider>
-      <AppSidebar variant="sidebar" />
-      <SidebarInset>
-        <SiteHeader />
-        <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-2">
-            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-              <Outlet />
-            </div>
-          </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    <div>
+      <Outlet />
+    </div>
   );
 }

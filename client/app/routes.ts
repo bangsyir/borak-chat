@@ -6,7 +6,13 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
-  layout("routes/layout.tsx", [index("routes/home.tsx")]),
+  index("routes/home.tsx"),
+  layout("routes/layout.tsx", [
+    route("/direct-message", "routes/direct-message.tsx", [
+      route(":friendId", "routes/direct-message.$friendId.tsx"),
+    ]),
+    route("/rooms", "routes/rooms.tsx"),
+  ]),
   route("/login", "routes/login.tsx"),
   route("/set-theme", "routes/set-theme.ts"),
   route("/register", "routes/register.tsx"),
