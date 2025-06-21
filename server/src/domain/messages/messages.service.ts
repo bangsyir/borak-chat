@@ -2,6 +2,7 @@ import { UserService } from "../user/user.service";
 import { MessagesRespository } from "./messages.repository";
 import { DirectMessage } from "../../../generated/prisma";
 import { ResultType } from "../core/shared/response.util";
+import { sendToUser } from "../../infrastructure/ws/websocketManager";
 
 export const MessagesService = (
   messagesRepo: MessagesRespository,
@@ -61,7 +62,6 @@ export const MessagesService = (
   ): Promise<
     ResultType<Pick<DirectMessage, "receiverId" | "content">, any>
   > => {
-    console.log({ currentUserId, friendId, content });
     try {
       const friend = await userService.findById(friendId);
       if (!friend) {
@@ -76,6 +76,20 @@ export const MessagesService = (
         friend.id,
         content,
       );
+
+      // websocket payload
+      const payload = {
+        id: sendMessage.id,
+        content: sendMessage.content,
+        createdAt: sendMessage.createdAt,
+        isRead: false,
+        sender: friend.username,
+        isOwn: false,
+      };
+      sendToUser(friend.public_id, {
+        type: "NEW_MESSAGE",
+        payload: payload,
+      });
       return {
         ok: true,
         message: "successfull",
@@ -86,7 +100,6 @@ export const MessagesService = (
         statusCode: 201,
       };
     } catch (error: any) {
-      console.error(error);
       return { ok: false, message: "something wrong", statusCode: 500 };
     }
   },
