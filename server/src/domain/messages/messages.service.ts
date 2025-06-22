@@ -60,7 +60,7 @@ export const MessagesService = (
     friendId: number,
     content: string,
   ): Promise<
-    ResultType<Pick<DirectMessage, "receiverId" | "content">, any>
+    ResultType<Pick<DirectMessage, "id" | "receiverId" | "content">, any>
   > => {
     try {
       const friend = await userService.findById(friendId);
@@ -94,6 +94,7 @@ export const MessagesService = (
         ok: true,
         message: "successfull",
         data: {
+          id: sendMessage.id,
           content: sendMessage.content,
           receiverId: sendMessage.receiverId,
         },

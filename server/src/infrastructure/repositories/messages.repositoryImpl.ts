@@ -28,7 +28,6 @@ export const MessagesRepositoryImpl: MessagesRespository = {
     return messages;
   },
   sendMessage: async (senderId, receiverId, content) => {
-    console.log("sendMessage");
     const message = await prisma.directMessage.create({
       data: {
         senderId: senderId,
