@@ -64,6 +64,7 @@ messagesRoutes.post(
     // create new message
     const result = await messagesService.send(
       currentUser.sub,
+      currentUser.publicId,
       friendId,
       validated.content,
     );

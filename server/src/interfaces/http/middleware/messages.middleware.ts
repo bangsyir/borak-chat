@@ -32,7 +32,7 @@ export const sendMessagesValidation = createMiddleware(async (c, next) => {
   if (!isFriend || isFriend.status !== "accepted") {
     return c.json(createErrorResponse("you not friend ye"), 400);
   }
-  c.set("friendId", isFriend.id);
+  c.set("friendId", friend.id);
   c.set("createMessagesValidated", result.data);
   await next();
 });
