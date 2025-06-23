@@ -57,6 +57,7 @@ export const MessagesService = (
   },
   send: async (
     currentUserId: number,
+    currentUserPublicId: string,
     friendId: number,
     content: string,
   ): Promise<
@@ -84,6 +85,8 @@ export const MessagesService = (
         createdAt: sendMessage.createdAt,
         isRead: false,
         sender: friend.username,
+        senderPublicId: currentUserPublicId,
+        receiverId: friend.public_id,
         isOwn: false,
       };
       sendToUser(friend.public_id, {
