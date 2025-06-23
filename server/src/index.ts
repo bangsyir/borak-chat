@@ -6,7 +6,13 @@ import { friendshipRoutes } from "./interfaces/http/routes/friendship.route";
 import { messagesRoutes } from "./interfaces/http/routes/messages.route";
 import { roomsRoutes } from "./interfaces/http/routes/rooms.route";
 import { HTTPException } from "hono/http-exception";
-import { wsHadler, wsRouter } from "./interfaces/http/routes/ws.route";
+import { verify } from "hono/jwt";
+import {
+  addConnection,
+  removeConnection,
+} from "./infrastructure/ws/websocketManager";
+import { serve, ServerWebSocket } from "bun";
+import { WebSocketData } from "./shared/types/websocket";
 
 const app = new Hono();
 
@@ -36,16 +42,68 @@ app.route("/api/auth", authRoutes);
 app.route("/api", friendshipRoutes);
 app.route("/api", messagesRoutes);
 app.route("/api", roomsRoutes);
-app.route("/ws", wsRouter);
+// app.route("/ws", wsRouter);
 app.get("/", (c) => {
   return c.text("Hello Hono!");
 });
 
-export default {
-  port: process.env.PORT || "3000",
-  fetch: app.fetch,
-  websocket: wsHadler,
+const serverConfig = {
+  port: process.env.PORT || 3000,
+  fetch: async (req: Request, server: any) => {
+    const url = new URL(req.url);
+    // Handle WebSocket upgrade
+    if (url.pathname === "/ws") {
+      // Get token from cookies
+      const token = url.searchParams.get("token");
+      if (!token) return new Response("Unauthorized", { status: 401 });
+      try {
+        const user = await verify(token, Bun.env.JWT_SECRET!);
+        if (!user) return new Response("Unauthorized", { status: 401 });
+
+        // Upgrade to WebSocket with user data
+        if (
+          server.upgrade(req, {
+            data: { userId: user.publicId },
+          })
+        ) {
+          return new Response();
+        }
+        return new Response("Upgrade failed", { status: 400 });
+      } catch (error) {
+        return new Response("Authentication failed", { status: 401 });
+      }
+    }
+    // All other requests go to Hono app
+    return app.fetch(req);
+  },
+  websocket: {
+    open(ws: ServerWebSocket<WebSocketData>) {
+      const userId = ws.data.userId;
+      console.log(`WebSocket connected: ${userId}`);
+      addConnection(userId, ws);
+    },
+    message(ws: ServerWebSocket<WebSocketData>, message: string) {
+      // Handle ping/pong
+      if (message === "ping") ws.send("pong");
+
+      // Add other message handlers here
+    },
+    close(ws: ServerWebSocket<WebSocketData>) {
+      const userId = ws.data.userId;
+      console.log(`WebSocket disconnected: ${userId}`);
+      removeConnection(userId, ws);
+    },
+    error(_ws: ServerWebSocket<WebSocketData>, error: Error) {
+      console.error("WebSocket error:", error);
+    },
+  },
+  // Keep all your Bun-specific configurations
   watch: process.env.NODE_ENV === "development",
   smol: true,
   tsconfig: "./tsconfig.json",
+  // Add any other Bun server options you need
+  development: process.env.NODE_ENV !== "production",
 };
+
+serve(serverConfig);
+console.log(`Server running on port ${serverConfig.port}`);
