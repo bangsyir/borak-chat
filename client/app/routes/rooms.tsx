@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { ChatArea } from "~/components/chat-area";
 import { ChatSidebar } from "~/components/chat-sidebar";
@@ -23,22 +22,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 export default function RoomsRoute() {
   const { rooms } = useLoaderData();
-  const [activeChat, setActiveChat] = useState<{
-    type: "direct" | "room";
-    id: string;
-    name: string;
-  } | null>(null);
+ 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <ChatSidebar
-          activeChat={activeChat}
-          onChatSelect={setActiveChat}
           friends={[]}
           rooms={rooms}
           activeTab="rooms"
         />
-        <ChatArea activeChat={activeChat} />
+        <ChatArea />
       </div>
     </SidebarProvider>
   );

@@ -2,6 +2,7 @@ import { MessageSquare } from "lucide-react";
 import { SidebarTrigger } from "~/components/ui/sidebar";
 import { ModeToggle } from "./mode-toggle";
 import { Outlet, useLocation } from "react-router";
+import { useEffect, useRef } from "react";
 
 export function ChatArea() {
   const location = useLocation();
@@ -10,8 +11,8 @@ export function ChatArea() {
     location.pathname === "/rooms"
   ) {
     return (
-      <div className="flex-1 flex flex-col">
-        <div className="border-b border-border p-3 flex items-center justify-between">
+      <div className="flex-1 flex flex-col h-screen">
+        <div className="border-b border-border p-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <SidebarTrigger />
             <h2 className="font-semibold">ChatApp</h2>
