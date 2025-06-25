@@ -85,12 +85,12 @@ export const MessagesService = (
         createdAt: sendMessage.createdAt,
         isRead: false,
         sender: friend.username,
-        senderPublicId: currentUserPublicId,
-        receiverId: friend.public_id,
         isOwn: false,
       };
       sendToUser(friend.public_id, {
         type: "NEW_MESSAGE",
+        userPublicId: currentUserPublicId,
+        receiverPublicId: friend.public_id,
         payload: payload,
       });
       return {

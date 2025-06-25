@@ -10,9 +10,10 @@ import { verify } from "hono/jwt";
 import {
   addConnection,
   removeConnection,
+  setOnlineStatus,
+  WebSocketData,
 } from "./infrastructure/ws/websocketManager";
 import { serve, ServerWebSocket } from "bun";
-import { WebSocketData } from "./shared/types/websocket";
 
 const app = new Hono();
 
@@ -63,7 +64,7 @@ const serverConfig = {
         // Upgrade to WebSocket with user data
         if (
           server.upgrade(req, {
-            data: { userId: user.publicId },
+            data: { userId: user.sub, userPublicId: user.publicId },
           })
         ) {
           return new Response();
@@ -77,21 +78,31 @@ const serverConfig = {
     return app.fetch(req);
   },
   websocket: {
-    open(ws: ServerWebSocket<WebSocketData>) {
-      const userId = ws.data.userId;
-      console.log(`WebSocket connected: ${userId}`);
-      addConnection(userId, ws);
+    async open(ws: ServerWebSocket<WebSocketData>) {
+      const { userId, userPublicId } = ws.data;
+      console.log(`WebSocket connected: ${userPublicId}`);
+      await addConnection(userId, userPublicId, ws);
     },
-    message(ws: ServerWebSocket<WebSocketData>, message: string) {
+    async message(ws: ServerWebSocket<WebSocketData>, message: any) {
       // Handle ping/pong
-      if (message === "ping") ws.send("pong");
-
-      // Add other message handlers here
+      const data = JSON.parse(message);
+      if (data.type === "ping") {
+        ws.send(JSON.stringify({ type: "pong" }));
+      }
+      try {
+        if (data.type === "online") {
+          const { userId, userPublicId } = ws.data;
+          await setOnlineStatus(userId, userPublicId, true);
+        }
+      } catch (error) {
+        console.error("Error parsing websocket message: ", error);
+      }
     },
-    close(ws: ServerWebSocket<WebSocketData>) {
-      const userId = ws.data.userId;
-      console.log(`WebSocket disconnected: ${userId}`);
-      removeConnection(userId, ws);
+    async close(ws: ServerWebSocket<WebSocketData>) {
+      const { userId, userPublicId } = ws.data;
+      console.log(`WebSocket disconnected: ${userPublicId}`);
+
+      await removeConnection(userId, userPublicId, ws);
     },
     error(_ws: ServerWebSocket<WebSocketData>, error: Error) {
       console.error("WebSocket error:", error);
