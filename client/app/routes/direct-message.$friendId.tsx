@@ -13,6 +13,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { SidebarTrigger } from "~/components/ui/sidebar";
+import { useLayoutData } from "~/hooks/use-layout-data";
 import { useAutoScroll } from "~/hooks/use-scrollable";
 import { getSession } from "~/lib/session.server";
 
@@ -42,7 +43,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   );
   const WS_URL = `ws://localhost:3000/ws?token=${token}`
   const result = await response.json();
-  console.log(result)
   return {
     ...result,
     friendId: friendId,
@@ -75,14 +75,39 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
 export default function DirectMessageFriend() {
   const { data, friendId } = useLoaderData();
-  const messagesEndRef = useAutoScroll(data.messages)
+  const [messages, setMessages] = useState<DirectMessageResponse[]>(data.messages)
+  const [onlineStatus, setOnlineStatus] = useState<boolean>(false)
+  const messagesEndRef = useAutoScroll(messages)
+  const layoutData = useLayoutData()
 
+  const handleNewMessage = (newMessage: DirectMessageResponse) => {
+    setMessages(prev => {
+      if (prev.some(msg => msg.id === newMessage.id)) return prev
+      return [...prev, newMessage]
+    })
+  }
 
-  // Handle optimistic updates when sending
+  const handleSend = (content: string) => {
+    const tempId = Date.now()
+    const optomisticMessage = {
+      id: tempId,
+      content,
+      is_read: false,
+      isOwn: true,
+      created_at: new Date(),
+      sender: layoutData.data.username
+    }
+
+    // add immediatlety to UI 
+    setMessages(prev => {
+      if (prev.some(msg => msg.id === optomisticMessage.id)) return prev
+      return [...prev, optomisticMessage]
+    })
+  }
 
   return (
     <div className="flex flex-1 flex-col h-screen">
-      <ChatwebSocket />
+      <ChatwebSocket userPublicId={layoutData.data.public_id} onNewMessage={handleNewMessage} onOnlineStatus={setOnlineStatus} />
       {/* Chat Header */}
       <header className="border-b border-border p-3 flex items-center justify-between flex-shrink-0 bg-backgrond">
         <div className="flex items-center gap-3">
@@ -95,7 +120,12 @@ export default function DirectMessageFriend() {
             </Avatar>
             <div>
               <h2 className="font-semibold">{data.friendName}</h2>
-              <p className="text-xs text-muted-foreground">Online</p>
+              {onlineStatus === true ? (
+                <p className="text-xs text-green-500">Online</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">Offline</p>
+
+              )}
             </div>
           </div>
         </div>
@@ -121,7 +151,7 @@ export default function DirectMessageFriend() {
           {/* Sample messages - replace with real messages */}
 
           <div className="space-y-4">
-            {data.messages.map((message: any) => (
+            {messages.map((message: any) => (
               <div
                 key={message.id}
                 className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
@@ -149,12 +179,12 @@ export default function DirectMessageFriend() {
       </ScrollArea>
 
       {/* Message Input */}
-      <MessageInput friendName={data.friendName} friendId={friendId} />
+      <MessageInput friendName={data.friendName} friendId={friendId} onSend={handleSend} />
     </div>
   );
 }
 
-function MessageInput({ friendName, friendId }: { friendName: string, friendId: string }) {
+function MessageInput({ friendName, friendId, onSend }: { friendName: string, friendId: string, onSend: (value: string) => void }) {
   const [message, setMessage] = useState("")
   const fetcher = useFetcher()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -171,6 +201,7 @@ function MessageInput({ friendName, friendId }: { friendName: string, friendId: 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     fetcher.submit({ content: message }, { method: "post", action: `/direct-message/${friendId}` })
+    onSend(message)
   }
 
   return (
