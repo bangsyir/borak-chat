@@ -9,6 +9,7 @@ import { HTTPException } from "hono/http-exception";
 import { verify } from "hono/jwt";
 import {
   addConnection,
+  onlineStatus,
   removeConnection,
   setOnlineStatus,
   WebSocketData,
@@ -83,19 +84,18 @@ const serverConfig = {
       console.log(`WebSocket connected: ${userPublicId}`);
       await addConnection(userId, userPublicId, ws);
     },
-    async message(ws: ServerWebSocket<WebSocketData>, message: any) {
+    async message(ws: ServerWebSocket<WebSocketData>, message: string) {
       // Handle ping/pong
-      const data = JSON.parse(message);
-      if (data.type === "ping") {
-        ws.send(JSON.stringify({ type: "pong" }));
-      }
-      try {
-        if (data.type === "online") {
-          const { userId, userPublicId } = ws.data;
-          await setOnlineStatus(userId, userPublicId, true);
-        }
-      } catch (error) {
-        console.error("Error parsing websocket message: ", error);
+      if (message === "ping") {
+        const { userPublicId } = ws.data;
+        // send current status to the client
+        ws.send(
+          JSON.stringify({
+            type: "online_status",
+            userPublicId: userPublicId,
+            isOnline: true,
+          }),
+        );
       }
     },
     async close(ws: ServerWebSocket<WebSocketData>) {

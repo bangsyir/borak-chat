@@ -9,7 +9,7 @@ export type WebSocketData = {
 // track incoming and outgoing messages
 const connections = new Map<string, ServerWebSocket<WebSocketData>[]>();
 // track online status
-const onlineStatus = new Map<string, boolean>();
+export const onlineStatus = new Map<string, boolean>();
 
 export const addConnection = async (
   userId: number,
@@ -68,7 +68,7 @@ export const setOnlineStatus = async (
   isOnline: boolean,
 ) => {
   onlineStatus.set(userPublicId, isOnline);
-  console.log(onlineStatus);
+  // console.log(onlineStatus);
   await broadcastStatusChage(userId, userPublicId, isOnline);
 };
 
@@ -84,12 +84,6 @@ const broadcastStatusChage = async (
   // 1. get user friend
   // 2. get user room members
   // 3. send status updates to all these connections
-  // const statusMessage = {
-  //   type: "online_status",
-  //   userPublicId: userPublicId,
-  //   isOnline,
-  //   timestamp: new Date().toISOString(),
-  // };
   const friends = await findFriends(userId, "accepted");
   friends.forEach((friend) => {
     sendToUser(friend.publicId, {
