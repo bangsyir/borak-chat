@@ -1,4 +1,4 @@
-import { MessageSquare, Send } from "lucide-react";
+import { MessageSquare, Send, Target } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import {
   useFetcher,
@@ -13,8 +13,11 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { SidebarTrigger } from "~/components/ui/sidebar";
+import { useWebSocketContext } from "~/context/websocket-context";
 import { useLayoutData } from "~/hooks/use-layout-data";
 import { useAutoScroll } from "~/hooks/use-scrollable";
+import { useOnlineStatusStore } from "~/hooks/useOnlineStatusStore";
+import { useTypingStore } from "~/hooks/useTypingStore";
 import { getSession } from "~/lib/session.server";
 
 export type DirectMessageResponse = {
@@ -76,10 +79,17 @@ export async function action({ request, params }: ActionFunctionArgs) {
 export default function DirectMessageFriend() {
   const { data, friendId } = useLoaderData();
   const [messages, setMessages] = useState<DirectMessageResponse[]>(data.messages)
-  const [onlineStatus, setOnlineStatus] = useState<boolean>(false)
-  const messagesEndRef = useAutoScroll(messages)
+  const { containerRef, messageEndRef } = useAutoScroll(messages)
+  const friendStatus = useOnlineStatusStore((state) => state.getStatus(friendId))
+  const isTyping = useTypingStore(
+    state => state.typingStatus[friendId]
+  )
   const layoutData = useLayoutData()
 
+  useEffect(() => {
+    setMessages(data.messages)
+    // fetcher.load(
+  }, [data.messages])
   const handleNewMessage = (newMessage: DirectMessageResponse) => {
     setMessages(prev => {
       if (prev.some(msg => msg.id === newMessage.id)) return prev
@@ -106,81 +116,84 @@ export default function DirectMessageFriend() {
   }
 
   return (
-    <div className="flex flex-1 flex-col h-screen">
-      <ChatwebSocket userPublicId={layoutData.data.public_id} onNewMessage={handleNewMessage} onOnlineStatus={setOnlineStatus} />
-      {/* Chat Header */}
-      <header className="border-b border-border p-3 flex items-center justify-between flex-shrink-0 bg-backgrond">
-        <div className="flex items-center gap-3">
-          <SidebarTrigger />
+    <ChatwebSocket friendPublicId={friendId} onNewMessage={handleNewMessage}>
+      <div className="flex flex-1 flex-col h-screen">
+        {/* Chat Header */}
+        <header className="border-b border-border p-3 flex items-center justify-between flex-shrink-0 bg-backgrond">
           <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="text-xs">
-                {data.friendName.slice(0, 2)}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h2 className="font-semibold">{data.friendName}</h2>
-              {onlineStatus === true ? (
-                <p className="text-xs text-green-500">Online</p>
-              ) : (
-                <p className="text-xs text-muted-foreground">Offline</p>
-
-              )}
+            <SidebarTrigger />
+            <div className="flex items-center gap-3">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="text-xs">
+                  {data.friendName.slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex items-center gap-1">
+                <h2 className="font-semibold">{data.friendName}</h2>
+                {friendStatus?.isInThisChat ? (
+                  <div className="rounded-full bg-green-500 w-2 h-2 flex flex-1"></div>
+                ) : friendStatus?.isOnline ? (
+                  <div className="rounded-full bg-yellow-500 w-2 h-2 flex flex-1"></div>
+                ) : (
+                  <div className="rounded-full bg-gray-500 w-2 h-2 flex flex-1"></div>
+                )}
+                {isTyping && <span className="text-gray-500 text-sm">is typing...</span>}
+              </div>
             </div>
           </div>
-        </div>
-        <ModeToggle />
-      </header>
+          <ModeToggle />
+        </header>
 
-      {/* Messages Area */}
-      <ScrollArea className="flex-1 min-h-0">
-        <div className="p-4 space-y-4">
-          {/* Welcome message */}
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageSquare className="w-8 h-8 text-primary" />
+        {/* Messages Area */}
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="p-4 space-y-4">
+            {/* Welcome message */}
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageSquare className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">
+                {`This is the beginning of your conversation with ${data.friendName}`}
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                Send a message to start the conversation
+              </p>
             </div>
-            <h3 className="text-lg font-semibold mb-2">
-              {`This is the beginning of your conversation with ${data.friendName}`}
-            </h3>
-            <p className="text-muted-foreground text-sm">
-              Send a message to start the conversation
-            </p>
-          </div>
 
-          {/* Sample messages - replace with real messages */}
+            {/* Sample messages - replace with real messages */}
 
-          <div className="space-y-4">
-            {messages.map((message: any) => (
-              <div
-                key={message.id}
-                className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
-              >
+            <div className="space-y-4" ref={containerRef}>
+              {messages.map((message: any) => (
                 <div
-                  className={`max-w-xs lg:max-w-md ${message.isOwn ? "order-2" : "order-1"}`}
+                  key={message.id}
+                  className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`px-3 py-2 rounded-lg ${message.isOwn
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
-                      }`}
+                    className={`max-w-xs lg:max-w-md ${message.isOwn ? "order-2" : "order-1"}`}
                   >
-                    <p className="text-sm">{message.content}</p>
+                    <div
+                      className={`px-3 py-2 rounded-lg ${message.isOwn
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted"
+                        }`}
+                    >
+                      <p className="text-sm">{message.content}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 px-3">
+                      {message.timestamp}
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1 px-3">
-                    {message.timestamp}
-                  </p>
                 </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
+              ))}
+              <div ref={messageEndRef} />
+            </div>
           </div>
-        </div>
-      </ScrollArea>
+        </ScrollArea>
 
-      {/* Message Input */}
-      <MessageInput friendName={data.friendName} friendId={friendId} onSend={handleSend} />
-    </div>
+        {/* Message Input */}
+        <MessageInput friendName={data.friendName} friendId={friendId} onSend={handleSend} />
+      </div>
+    </ChatwebSocket>
   );
 }
 
@@ -188,6 +201,8 @@ function MessageInput({ friendName, friendId, onSend }: { friendName: string, fr
   const [message, setMessage] = useState("")
   const fetcher = useFetcher()
   const inputRef = useRef<HTMLInputElement>(null)
+  const typingTimeout = useRef<NodeJS.Timeout | null>(null)
+  const { send } = useWebSocketContext()
 
   useEffect(() => {
     if (fetcher.state === "idle" && fetcher.data && fetcher.data.success) {
@@ -198,10 +213,43 @@ function MessageInput({ friendName, friendId, onSend }: { friendName: string, fr
     }
   }, [fetcher.state, fetcher.data])
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setMessage(value)
+
+    // start typing notification 
+    if (value.length === 1) {
+      send({
+        type: "typing_start",
+        payload: { targetPublicId: friendId }
+      })
+    }
+    // reset typing timeout
+    if (typingTimeout.current) clearTimeout(typingTimeout.current)
+    typingTimeout.current = setTimeout(() => {
+      if (value.length > 0) {
+        send({
+          type: "typing_stop",
+          payload: { targetPublicId: friendId }
+        })
+      }
+    }, 2000) // 2s delay after last keystroke
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     fetcher.submit({ content: message }, { method: "post", action: `/direct-message/${friendId}` })
     onSend(message)
+    // clear typing status 
+    send({
+      type: "typing_stop",
+      payload: { targetPublicId: friendId }
+    })
+    setMessage("")
+    if (typingTimeout.current) {
+      clearTimeout(typingTimeout.current)
+      typingTimeout.current = null
+    }
   }
 
   return (
@@ -215,8 +263,9 @@ function MessageInput({ friendName, friendId, onSend }: { friendName: string, fr
               name="content"
               placeholder={`Message ${friendName}...`}
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={handleInputChange}
               className="pr-20"
+              autoComplete="off"
             />
             <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
               <Button size="icon" className="h-8 w-8" type="submit">
