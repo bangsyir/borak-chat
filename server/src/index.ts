@@ -9,9 +9,11 @@ import { HTTPException } from "hono/http-exception";
 import { verify } from "hono/jwt";
 import {
   addConnection,
-  onlineStatus,
+  addFriendship,
   removeConnection,
-  setOnlineStatus,
+  setChatAreaPresence,
+  setChatFocus,
+  setTypingStatus,
   WebSocketData,
 } from "./infrastructure/ws/websocketManager";
 import { serve, ServerWebSocket } from "bun";
@@ -79,30 +81,46 @@ const serverConfig = {
     return app.fetch(req);
   },
   websocket: {
-    async open(ws: ServerWebSocket<WebSocketData>) {
-      const { userId, userPublicId } = ws.data;
+    open(ws: ServerWebSocket<WebSocketData>) {
+      const { userPublicId } = ws.data;
       console.log(`WebSocket connected: ${userPublicId}`);
-      await addConnection(userId, userPublicId, ws);
+      addConnection(userPublicId, ws);
     },
-    async message(ws: ServerWebSocket<WebSocketData>, message: string) {
+    message(ws: ServerWebSocket<WebSocketData>, message: any) {
       // Handle ping/pong
-      if (message === "ping") {
-        const { userPublicId } = ws.data;
-        // send current status to the client
-        ws.send(
-          JSON.stringify({
-            type: "online_status",
-            userPublicId: userPublicId,
-            isOnline: true,
-          }),
-        );
+      const parsed = JSON.parse(message);
+      const { userPublicId } = ws.data;
+
+      if (parsed.type === "ping") {
+        ws.send(JSON.stringify({ type: "pong" }));
+      }
+      // handle online status
+      if (parsed.type === "presence") {
+        setChatAreaPresence(userPublicId, parsed.payload.isInChat);
+      }
+      // handler focus in chat status
+      if (parsed.type === "chat_focus") {
+        const targetPublicId = parsed.payload.targetPublicId;
+        if (targetPublicId) {
+          addFriendship(userPublicId, targetPublicId);
+        }
+        setChatFocus(userPublicId, targetPublicId);
+      }
+      // handle typing status
+      if (parsed.type === "typing_start") {
+        const targetPublicId = parsed.payload.targetPublicId;
+        setTypingStatus(userPublicId, targetPublicId, true);
+      }
+      if (parsed.type === "typing_stop") {
+        const targetPublicId = parsed.payload.targetPublicId;
+        setTypingStatus(userPublicId, targetPublicId, false);
       }
     },
     async close(ws: ServerWebSocket<WebSocketData>) {
-      const { userId, userPublicId } = ws.data;
+      const { userPublicId } = ws.data;
       console.log(`WebSocket disconnected: ${userPublicId}`);
 
-      await removeConnection(userId, userPublicId, ws);
+      await removeConnection(userPublicId, ws);
     },
     error(_ws: ServerWebSocket<WebSocketData>, error: Error) {
       console.error("WebSocket error:", error);
