@@ -1,5 +1,8 @@
 import { useEffect, useRef } from "react";
-import { useLoaderData, useRevalidator } from "react-router";
+import { useLoaderData } from "react-router";
+import { WebSocketContext } from "~/context/websocket-context";
+import { useOnlineStatusStore } from "~/hooks/useOnlineStatusStore";
+import { useTypingStore } from "~/hooks/useTypingStore";
 
 export type DirectMessageResponse = {
   id: number;
@@ -11,21 +14,27 @@ export type DirectMessageResponse = {
 };
 
 export function ChatwebSocket({
-  userPublicId,
+  children,
+  friendPublicId,
   onNewMessage,
-  onOnlineStatus
 }: {
-  userPublicId: string
+  children: React.ReactNode,
+  friendPublicId: string,
   onNewMessage: (value: DirectMessageResponse) => void,
-  onOnlineStatus: (value: boolean) => void
 }) {
   const { ENV, friendId } = useLoaderData<{
     ENV: { WS_URL: string },
     friendId: string
   }>()
-  const revalidator = useRevalidator()
-  // const fetcher = useFetcher()
+  const prevFriendIdRef = useRef<string | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
+
+  const send = (message: any) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(message))
+    }
+  }
+
   useEffect(() => {
     const connect = () => {
       const ws = new WebSocket(ENV.WS_URL)
@@ -33,58 +42,44 @@ export function ChatwebSocket({
 
       ws.onopen = () => {
         console.log("Websocket connected")
-        // ping the server to get online status
-        ws.send("ping")
+        // ws.send(JSON.stringify({ type: "ping" }))
+        ws.send(JSON.stringify({
+          type: "presence", payload: {
+            isInChat: true
+          }
+        }))
+        ws.send(JSON.stringify({
+          type: "chat_focus",
+          payload: { targetPublicId: friendPublicId }
+        }))
       }
 
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data)
-          if (data.type === "pong") return
-
-          if (data.type === "NEW_MESSAGE") {
-            if (data.userPublicId === friendId || data.senderPublicId === friendId) {
-              const newMessage: DirectMessageResponse = {
-                id: data.payload.id,
-                content: data.payload.content,
-                is_read: data.payload.is_read,
-                isOwn: data.payload.isOwn,
-                created_at: data.payload.created_at,
-                sender: data.payload.sender
+          switch (data.type) {
+            case "NEW_MESSAGE":
+              if (data.userPublicId === friendId || data.senderPublicId === friendId) {
+                const newMessage: DirectMessageResponse = {
+                  id: data.payload.id,
+                  content: data.payload.content,
+                  is_read: data.payload.is_read,
+                  isOwn: data.payload.isOwn,
+                  created_at: data.payload.created_at,
+                  sender: data.payload.sender
+                }
+                onNewMessage(newMessage)
               }
-              onNewMessage(newMessage)
-            }
-            return
-          }
+              break;
+            case "presence_update":
+              console.log("📨 presence_update", data.userPublicId)
+              useOnlineStatusStore.getState().updateStatus(data.userPublicId, data.presence)
+              break;
+            case "typing_status":
+              useTypingStore.getState().setTypingStatus(data.senderPublicId, data.isTyping)
+              break;
 
-          if (data.type === "online_status") {
-            if (data.userPublicId === friendId || data.userPublicId === userPublicId) {
-              onOnlineStatus(data.isOnline)
-            }
-            return
           }
-          // switch (data.type) {
-          //   case "NEW_MESSAGE":
-          //     if (data.userPublicId === friendId || data.senderPublicId === friendId) {
-          //       const newMessage: DirectMessageResponse = {
-          //         id: data.payload.id,
-          //         content: data.payload.content,
-          //         is_read: data.payload.is_read,
-          //         isOwn: data.payload.isOwn,
-          //         created_at: data.payload.created_at,
-          //         sender: data.payload.sender
-          //       }
-          //       onNewMessage(newMessage)
-          //     }
-          //     break;
-          //   case "online_status":
-          //     console.log({ data })
-          //     if (data.userPublicId === friendId || data.userPublicId === userPublicId) {
-          //       onOnlineStatus({ [data.userPublicId]: data.isOnline })
-          //     }
-          //     break;
-          //
-          // }
         } catch (error) {
           console.error("Error parsing Websocket message: ", error)
         }
@@ -92,30 +87,74 @@ export function ChatwebSocket({
 
       ws.onclose = () => {
         console.log("websocket disconnected, Reconnecting...")
-
         setTimeout(connect, 3000)
       }
 
       ws.onerror = (error) => {
         console.log("Websocket error: ", error)
       }
-
-      // Heartbeat to keep connecting alive 
-      // const heartBeat = setInterval(() => {
-      //   if (ws.readyState === WebSocket.OPEN) {
-      //     ws.send("ping")
-      //   }
-      // }, 3000)
-      //
-      // return () => clearInterval(heartBeat)
     }
 
     connect()
-
     return () => {
-      wsRef.current?.close()
-    }
-  }, [ENV.WS_URL, friendId, revalidator])
+      // 1. clear focus
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({
+          type: "chat_focus",
+          payload: {
+            targetPublicId: friendPublicId,
+            isFocusing: false,
+          }
 
-  return null
+        }))
+
+        // 2. exit chat area
+        wsRef.current?.send(JSON.stringify({
+          type: "presence",
+          payload: {
+            isInChat: false
+          }
+        }))
+      }
+      // 3. Close connection
+      wsRef.current?.close(1000, "Client navigated away")
+    }
+  }, [ENV.WS_URL])
+
+  useEffect(() => {
+    const ws = wsRef.current
+    const prevFriend = prevFriendIdRef.current
+
+    console.log({ prevFriend })
+
+    if (!ws || ws.readyState !== WebSocket.OPEN) return
+
+    // skip if friendPublicId is the current user's own ID 
+    // 1. clear previous focus friendId
+    if (prevFriend) {
+      console.log(`↩️ unfocus ${prevFriend}`)
+      ws.send(JSON.stringify({
+        type: "chat_focus",
+        payload: {
+          targetPublicId: null,
+        }
+      }))
+    }
+    console.log(`👁️  focus ${friendId}`)
+    // 2. set new focus friendId
+    if (friendPublicId) {
+      ws.send(JSON.stringify({
+        type: "chat_focus",
+        payload: {
+          targetPublicId: friendPublicId,
+        }
+      }))
+    }
+    prevFriendIdRef.current = friendPublicId
+  }, [friendPublicId])
+  return (
+    <WebSocketContext.Provider value={{ send }}>
+      {children}
+    </WebSocketContext.Provider>
+  )
 }
