@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { ChatArea } from "~/components/chat-area";
-import { ChatSidebar } from "~/components/chat-sidebar";
-import { SidebarProvider } from "~/components/ui/sidebar";
+import { useChatContext } from "~/components/chat-provider";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { getSession } = await import("~/lib/session.server");
@@ -32,25 +31,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return { friends: friends };
 }
 export default function DirectMessagesPage() {
-  const { friends } = useLoaderData();
-  // const [activeChat, setActiveChat] = useState<{
-  //   type: "direct" | "room";
-  //   id: string;
-  //   name: string;
-  // } | null>(null);
+  const dataLoader = useLoaderData();
+  const { friends, setFriends, friendsLoading, setFriendsLoading } =
+    useChatContext();
+  useEffect(() => {
+    if (friends.length === 0 && !friendsLoading) {
+      setFriendsLoading(true);
+      setFriends(dataLoader.friends);
+      setFriendsLoading(false);
+    }
+  }, [friends]);
 
-  return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <ChatSidebar
-          // activeChat={activeChat}
-          // onChatSelect={setActiveChat}
-          friends={friends}
-          rooms={[]}
-          activeTab="direct"
-        />
-        <ChatArea />
-      </div>
-    </SidebarProvider>
-  );
+  return <ChatArea />;
 }

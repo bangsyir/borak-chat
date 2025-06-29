@@ -1,4 +1,4 @@
-import { MessageSquare, Send, Target } from "lucide-react";
+import { MessageSquare, Send } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import {
   useFetcher,
@@ -6,14 +6,16 @@ import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
 } from "react-router";
-import { ChatwebSocket } from "~/components/chat-websocket";
+import {
+  ChatwebSocket,
+  useWebSocketContext,
+} from "~/components/chat-websocket";
 import { ModeToggle } from "~/components/mode-toggle";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { SidebarTrigger } from "~/components/ui/sidebar";
-import { useWebSocketContext } from "~/context/websocket-context";
 import { useLayoutData } from "~/hooks/use-layout-data";
 import { useAutoScroll } from "~/hooks/use-scrollable";
 import { useOnlineStatusStore } from "~/hooks/useOnlineStatusStore";
@@ -44,12 +46,12 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
       },
     },
   );
-  const WS_URL = `ws://localhost:3000/ws?token=${token}`
+  const WS_URL = `ws://192.168.0.12:3000/ws?token=${token}`;
   const result = await response.json();
   return {
     ...result,
     friendId: friendId,
-    ENV: { WS_URL }
+    ENV: { WS_URL },
   };
 }
 
@@ -78,42 +80,44 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
 export default function DirectMessageFriend() {
   const { data, friendId } = useLoaderData();
-  const [messages, setMessages] = useState<DirectMessageResponse[]>(data.messages)
-  const { containerRef, messageEndRef } = useAutoScroll(messages)
-  const friendStatus = useOnlineStatusStore((state) => state.getStatus(friendId))
-  const isTyping = useTypingStore(
-    state => state.typingStatus[friendId]
-  )
-  const layoutData = useLayoutData()
+  const [messages, setMessages] = useState<DirectMessageResponse[]>(
+    data.messages,
+  );
+  const { containerRef, messageEndRef } = useAutoScroll(messages);
+  const friendStatus = useOnlineStatusStore((state) =>
+    state.getStatus(friendId),
+  );
+  const isTyping = useTypingStore((state) => state.typingStatus[friendId]);
+  const layoutData = useLayoutData();
 
   useEffect(() => {
-    setMessages(data.messages)
+    setMessages(data.messages);
     // fetcher.load(
-  }, [data.messages])
+  }, [data.messages]);
   const handleNewMessage = (newMessage: DirectMessageResponse) => {
-    setMessages(prev => {
-      if (prev.some(msg => msg.id === newMessage.id)) return prev
-      return [...prev, newMessage]
-    })
-  }
+    setMessages((prev) => {
+      if (prev.some((msg) => msg.id === newMessage.id)) return prev;
+      return [...prev, newMessage];
+    });
+  };
 
   const handleSend = (content: string) => {
-    const tempId = Date.now()
+    const tempId = Date.now();
     const optomisticMessage = {
       id: tempId,
       content,
       is_read: false,
       isOwn: true,
       created_at: new Date(),
-      sender: layoutData.data.username
-    }
+      sender: layoutData.data.username,
+    };
 
-    // add immediatlety to UI 
-    setMessages(prev => {
-      if (prev.some(msg => msg.id === optomisticMessage.id)) return prev
-      return [...prev, optomisticMessage]
-    })
-  }
+    // add immediatlety to UI
+    setMessages((prev) => {
+      if (prev.some((msg) => msg.id === optomisticMessage.id)) return prev;
+      return [...prev, optomisticMessage];
+    });
+  };
 
   return (
     <ChatwebSocket friendPublicId={friendId} onNewMessage={handleNewMessage}>
@@ -137,7 +141,9 @@ export default function DirectMessageFriend() {
                 ) : (
                   <div className="rounded-full bg-gray-500 w-2 h-2 flex flex-1"></div>
                 )}
-                {isTyping && <span className="text-gray-500 text-sm">is typing...</span>}
+                {isTyping && (
+                  <span className="text-gray-500 text-sm">is typing...</span>
+                )}
               </div>
             </div>
           </div>
@@ -172,10 +178,11 @@ export default function DirectMessageFriend() {
                     className={`max-w-xs lg:max-w-md ${message.isOwn ? "order-2" : "order-1"}`}
                   >
                     <div
-                      className={`px-3 py-2 rounded-lg ${message.isOwn
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                        }`}
+                      className={`px-3 py-2 rounded-lg ${
+                        message.isOwn
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted"
+                      }`}
                     >
                       <p className="text-sm">{message.content}</p>
                     </div>
@@ -191,66 +198,81 @@ export default function DirectMessageFriend() {
         </ScrollArea>
 
         {/* Message Input */}
-        <MessageInput friendName={data.friendName} friendId={friendId} onSend={handleSend} />
+        <MessageInput
+          friendName={data.friendName}
+          friendId={friendId}
+          onSend={handleSend}
+        />
       </div>
     </ChatwebSocket>
   );
 }
 
-function MessageInput({ friendName, friendId, onSend }: { friendName: string, friendId: string, onSend: (value: string) => void }) {
-  const [message, setMessage] = useState("")
-  const fetcher = useFetcher()
-  const inputRef = useRef<HTMLInputElement>(null)
-  const typingTimeout = useRef<NodeJS.Timeout | null>(null)
-  const { send } = useWebSocketContext()
+function MessageInput({
+  friendName,
+  friendId,
+  onSend,
+}: {
+  friendName: string;
+  friendId: string;
+  onSend: (value: string) => void;
+}) {
+  const [message, setMessage] = useState("");
+  const fetcher = useFetcher();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const typingTimeout = useRef<NodeJS.Timeout | null>(null);
+  const { send } = useWebSocketContext();
 
   useEffect(() => {
     if (fetcher.state === "idle" && fetcher.data && fetcher.data.success) {
-      setMessage("")
+      setMessage("");
       if (inputRef.current) {
-        inputRef.current.focus()
+        inputRef.current.focus();
       }
     }
-  }, [fetcher.state, fetcher.data])
+  }, [fetcher.state, fetcher.data]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setMessage(value)
+    const value = e.target.value;
+    setMessage(value);
 
-    // start typing notification 
+    // start typing notification
     if (value.length === 1) {
       send({
         type: "typing_start",
-        payload: { targetPublicId: friendId }
-      })
+        payload: { targetPublicId: friendId },
+      });
     }
     // reset typing timeout
-    if (typingTimeout.current) clearTimeout(typingTimeout.current)
+    if (typingTimeout.current) clearTimeout(typingTimeout.current);
     typingTimeout.current = setTimeout(() => {
       if (value.length > 0) {
         send({
           type: "typing_stop",
-          payload: { targetPublicId: friendId }
-        })
+          payload: { targetPublicId: friendId },
+        });
       }
-    }, 2000) // 2s delay after last keystroke
-  }
+    }, 2000); // 2s delay after last keystroke
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    fetcher.submit({ content: message }, { method: "post", action: `/direct-message/${friendId}` })
-    onSend(message)
-    // clear typing status 
+    e.preventDefault();
+    fetcher.submit(
+      { content: message },
+      { method: "post", action: `/direct-message/${friendId}` },
+    );
+    onSend(message);
+    // clear typing status
     send({
       type: "typing_stop",
-      payload: { targetPublicId: friendId }
-    })
-    setMessage("")
+      payload: { targetPublicId: friendId },
+    });
+    setMessage("");
     if (typingTimeout.current) {
-      clearTimeout(typingTimeout.current)
-      typingTimeout.current = null
+      clearTimeout(typingTimeout.current);
+      typingTimeout.current = null;
     }
-  }
+  };
 
   return (
     <div className="border-t border-border p-4 flex-shrink-0 bg-backgrond sticky bottom-0">
@@ -276,6 +298,5 @@ function MessageInput({ friendName, friendId, onSend }: { friendName: string, fr
         </div>
       </div>
     </div>
-
-  )
+  );
 }

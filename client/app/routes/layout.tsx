@@ -1,4 +1,7 @@
 import { data, Outlet, type LoaderFunctionArgs } from "react-router";
+import { AppSidebar } from "~/components/app-sidebar";
+import { ChatProvider } from "~/components/chat-provider";
+import { SidebarProvider } from "~/components/ui/sidebar";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { destroySession, getToken } = await import("~/lib/session.server");
@@ -24,8 +27,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Layout() {
   return (
-    <div>
-      <Outlet />
-    </div>
+    <ChatProvider>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AppSidebar />
+          <Outlet />
+        </div>
+      </SidebarProvider>
+    </ChatProvider>
   );
 }

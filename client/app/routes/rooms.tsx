@@ -1,7 +1,7 @@
+import { useEffect } from "react";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { ChatArea } from "~/components/chat-area";
-import { ChatSidebar } from "~/components/chat-sidebar";
-import { SidebarProvider } from "~/components/ui/sidebar";
+import { useChatContext } from "~/components/chat-provider";
 
 // Mock data for rooms
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -21,18 +21,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return { rooms: result.data };
 }
 export default function RoomsRoute() {
-  const { rooms } = useLoaderData();
- 
-  return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <ChatSidebar
-          friends={[]}
-          rooms={rooms}
-          activeTab="rooms"
-        />
-        <ChatArea />
-      </div>
-    </SidebarProvider>
-  );
+  const loaderData = useLoaderData();
+  const { rooms, setRooms, roomsLoading, setRoomsLoading } = useChatContext();
+
+  useEffect(() => {
+    if (rooms.length === 0 && !roomsLoading) {
+      setRoomsLoading(true);
+      setRooms(loaderData.rooms);
+      setRoomsLoading(false);
+    }
+  }, [rooms]);
+
+  return <ChatArea />;
 }

@@ -14,7 +14,7 @@ import {
   useSidebar,
 } from "./ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { useFetcher, useLoaderData, useNavigate } from "react-router";
+import { useFetcher, useNavigate } from "react-router";
 import React, { useRef } from "react";
 import { toast } from "sonner";
 import { ChevronsUpDown, LogOutIcon, UserCircleIcon } from "lucide-react";

@@ -2,7 +2,6 @@ import { MessageSquare } from "lucide-react";
 import { SidebarTrigger } from "~/components/ui/sidebar";
 import { ModeToggle } from "./mode-toggle";
 import { Outlet, useLocation } from "react-router";
-import { useEffect, useRef } from "react";
 
 export function ChatArea() {
   const location = useLocation();
