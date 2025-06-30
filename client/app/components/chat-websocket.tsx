@@ -6,9 +6,9 @@ import { useTypingStore } from "~/hooks/useTypingStore";
 export type DirectMessageResponse = {
   id: number;
   content: string;
-  is_read: boolean;
+  isRead: boolean;
   isOwn: boolean;
-  created_at: Date;
+  createdAt: Date;
   sender: string;
 };
 export const WebSocketContext = createContext<{
@@ -81,9 +81,9 @@ export function ChatwebSocket({
                 const newMessage: DirectMessageResponse = {
                   id: data.payload.id,
                   content: data.payload.content,
-                  is_read: data.payload.is_read,
+                  isRead: data.payload.isRead,
                   isOwn: data.payload.isOwn,
-                  created_at: data.payload.created_at,
+                  createdAt: data.payload.createdAt,
                   sender: data.payload.sender,
                 };
                 onNewMessage(newMessage);
@@ -148,8 +148,6 @@ export function ChatwebSocket({
   useEffect(() => {
     const ws = wsRef.current;
     const prevFriend = prevFriendIdRef.current;
-
-    console.log({ prevFriend });
 
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
 

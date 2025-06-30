@@ -29,9 +29,11 @@ export default function Layout() {
   return (
     <ChatProvider>
       <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-background">
+        <div className="flex max-h-screen w-full bg-background">
           <AppSidebar />
-          <Outlet />
+          <main className="flex-1 flex flex-col min-w-0">
+            <Outlet />
+          </main>
         </div>
       </SidebarProvider>
     </ChatProvider>

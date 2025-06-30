@@ -42,21 +42,6 @@ import {
 } from "./ui/dialog";
 import { Label } from "./ui/label";
 import { useChatContext } from "./chat-provider";
-//
-// type Friend = {
-//   id: string;
-//   name: string;
-//   avatar: string;
-//   isOnline: boolean;
-//   lastSeen: string;
-// };
-//
-// type Room = {
-//   publicId: string;
-//   name: string;
-//   totalMember: string;
-//   isPrivate: boolean;
-// };
 
 export function AppSidebar() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -101,7 +86,7 @@ export function AppSidebar() {
             className={cn(
               "flex-1 flex items-center justify-center gap-2 p-3 text-sm font-medium transition-colors",
               location.pathname.includes("/direct-message")
-                ? "bg-accent text-accent-foreground border-b-2 border-primary"
+                ? "bg-primary text-accent-foreground border-b-2"
                 : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
             )}
           >
@@ -113,7 +98,7 @@ export function AppSidebar() {
             className={cn(
               "flex-1 flex items-center justify-center gap-2 p-3 text-sm font-medium transition-colors",
               location.pathname.includes("/rooms")
-                ? "bg-accent text-accent-foreground border-b-2 border-primary"
+                ? "bg-primary text-accent-foreground border-b-2"
                 : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
             )}
           >
@@ -132,9 +117,9 @@ export function AppSidebar() {
                   to={"#"}
                   className={cn(
                     buttonVariants({
-                      variant: "outline",
+                      variant: "ghost",
                       size: "icon",
-                      className: "hover:text-gray-500",
+                      className: "hover:border focus:border-gray-500",
                     }),
                   )}
                 >
@@ -160,7 +145,9 @@ export function AppSidebar() {
                             <SidebarMenuButton
                               className={cn(
                                 "h-auto p-3 justify-start",
-                                isActive && "bg-accent text-accent-foreground",
+                                isActive
+                                  ? "bg-primary text-accent-foreground hover:text-accent-foreground hover:bg-accent/50"
+                                  : "hover:bg-accent/50",
                               )}
                             >
                               <div className="flex items-center gap-3 w-full">
@@ -188,9 +175,7 @@ export function AppSidebar() {
                                     {friend.name}
                                   </p>
                                   <p
-                                    className={cn(
-                                      `text-xs truncate ${isActive ? "text-background" : "text-muted-foreground"}`,
-                                    )}
+                                    className={`text-xs truncate ${!isActive && "text-muted-foreground"}`}
                                   >
                                     {friend.isOnline
                                       ? "Online"
@@ -235,12 +220,13 @@ export function AppSidebar() {
                             <SidebarMenuButton
                               className={cn(
                                 "h-auto p-3 justify-start",
-                                isActive && "bg-accent text-accent-foreground",
+                                isActive &&
+                                  "bg-primary text-accent-foreground hover:text-accent/50",
                               )}
                             >
                               <div className="flex items-center gap-3 w-full">
                                 <div className="flex-shrink-0 h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
-                                  <Users className="h-4 w-4 text-primary" />
+                                  <Users className="h-4 w-4" />
                                 </div>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -255,7 +241,9 @@ export function AppSidebar() {
                                           <Lock className="h-4 w-4 text-secondary" />
                                         )}
                                       </div>
-                                      <p className="text-xs text-muted-foreground">
+                                      <p
+                                        className={`text-xs ${!isActive && "text-muted-foreground"}`}
+                                      >
                                         {room.totalMember} members
                                       </p>
                                     </div>
@@ -289,7 +277,7 @@ function AddFriendDialog() {
     <Dialog>
       <form>
         <DialogTrigger asChild>
-          <Button variant="outline" size="icon" className="hover:text-gray-500">
+          <Button variant="ghost" size="icon" className={cn("hover:border")}>
             <Plus className="h-3 w-3" />
           </Button>
         </DialogTrigger>

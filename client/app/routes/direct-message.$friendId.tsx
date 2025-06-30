@@ -15,19 +15,20 @@ import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { ScrollArea } from "~/components/ui/scroll-area";
+import { Separator } from "~/components/ui/separator";
 import { SidebarTrigger } from "~/components/ui/sidebar";
 import { useLayoutData } from "~/hooks/use-layout-data";
-import { useAutoScroll } from "~/hooks/use-scrollable";
 import { useOnlineStatusStore } from "~/hooks/useOnlineStatusStore";
 import { useTypingStore } from "~/hooks/useTypingStore";
+import { DateFormatDistance } from "~/lib/date-format";
 import { getSession } from "~/lib/session.server";
 
 export type DirectMessageResponse = {
   id: number;
   content: string;
-  is_read: boolean;
+  isRead: boolean;
   isOwn: boolean;
-  created_at: Date;
+  createdAt: Date;
   sender: string;
 };
 
@@ -83,17 +84,62 @@ export default function DirectMessageFriend() {
   const [messages, setMessages] = useState<DirectMessageResponse[]>(
     data.messages,
   );
-  const { containerRef, messageEndRef } = useAutoScroll(messages);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
   const friendStatus = useOnlineStatusStore((state) =>
     state.getStatus(friendId),
   );
   const isTyping = useTypingStore((state) => state.typingStatus[friendId]);
   const layoutData = useLayoutData();
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // instant scroll to bottom (animation)
+  const scrollToBottomInstant = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({
+        block: "end",
+        inline: "nearest",
+      });
+    }
+  };
+  // smooth scroll to bottom (with animation) - only for new messages
+  const scrollToBottomSmooth = () => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+      inline: "nearest",
+    });
+  };
+
+  // load messages when activechat change
   useEffect(() => {
     setMessages(data.messages);
-    // fetcher.load(
+    setIsInitialLoad(true);
   }, [data.messages]);
+
+  // handle scrolling base on context
+  useEffect(() => {
+    if (messages.length > 0) {
+      const timeoutId1 = setTimeout(() => {
+        scrollToBottomInstant();
+      }, 0);
+      const timeoutId2 = setTimeout(() => {
+        scrollToBottomInstant();
+        setIsInitialLoad(false);
+      }, 100);
+      return () => {
+        clearTimeout(timeoutId1);
+        clearTimeout(timeoutId2);
+      };
+    }
+  }, [messages, isInitialLoad]);
+
+  //handle component mount (page refresh)
+  useEffect(() => {
+    setIsInitialLoad(true);
+  }, []);
+
   const handleNewMessage = (newMessage: DirectMessageResponse) => {
     setMessages((prev) => {
       if (prev.some((msg) => msg.id === newMessage.id)) return prev;
@@ -106,9 +152,9 @@ export default function DirectMessageFriend() {
     const optomisticMessage = {
       id: tempId,
       content,
-      is_read: false,
+      isRead: false,
       isOwn: true,
-      created_at: new Date(),
+      createdAt: new Date(),
       sender: layoutData.data.username,
     };
 
@@ -117,91 +163,105 @@ export default function DirectMessageFriend() {
       if (prev.some((msg) => msg.id === optomisticMessage.id)) return prev;
       return [...prev, optomisticMessage];
     });
+    setTimeout(() => {
+      scrollToBottomSmooth();
+    }, 50);
+  };
+
+  const handleInputFocus = () => {
+    // Scroll to bottom when input is focused (mobile keyboard appears)
+    setTimeout(() => {
+      scrollToBottomSmooth();
+    }, 300);
   };
 
   return (
     <ChatwebSocket friendPublicId={friendId} onNewMessage={handleNewMessage}>
-      <div className="flex flex-1 flex-col h-screen">
+      <div className="flex flex-col h-svh w-full">
         {/* Chat Header */}
-        <header className="border-b border-border p-3 flex items-center justify-between flex-shrink-0 bg-backgrond">
-          <div className="flex items-center gap-3">
-            <SidebarTrigger />
-            <div className="flex items-center gap-3">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="text-xs">
-                  {data.friendName.slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex items-center gap-1">
-                <h2 className="font-semibold">{data.friendName}</h2>
-                {friendStatus?.isInThisChat ? (
-                  <div className="rounded-full bg-green-500 w-2 h-2 flex flex-1"></div>
-                ) : friendStatus?.isOnline ? (
-                  <div className="rounded-full bg-yellow-500 w-2 h-2 flex flex-1"></div>
-                ) : (
-                  <div className="rounded-full bg-gray-500 w-2 h-2 flex flex-1"></div>
-                )}
-                {isTyping && (
-                  <span className="text-gray-500 text-sm">is typing...</span>
-                )}
-              </div>
+        <header className="flex-shrink-0 flex items-center justify-between gap-2 p-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <SidebarTrigger />
+          <Separator orientation="vertical" className="mx-1 h-8" />
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="text-xs">
+                {data.friendName.slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex items-center gap-1">
+              <h2 className="font-semibold">{data.friendName}</h2>
+              {friendStatus?.isInThisChat ? (
+                <div className="rounded-full bg-green-500 w-2 h-2 flex flex-1"></div>
+              ) : friendStatus?.isOnline ? (
+                <div className="rounded-full bg-yellow-500 w-2 h-2 flex flex-1"></div>
+              ) : (
+                <div className="rounded-full bg-gray-500 w-2 h-2 flex flex-1"></div>
+              )}
+              {isTyping && (
+                <span className="text-gray-500 text-sm">is typing...</span>
+              )}
             </div>
           </div>
           <ModeToggle />
         </header>
 
         {/* Messages Area */}
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="p-4 space-y-4">
-            {/* Welcome message */}
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="w-8 h-8 text-primary" />
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <ScrollArea className="h-full p-3 sm:p-4">
+            <div className="p-4 space-y-4">
+              {/* Welcome message */}
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">
+                  {`This is the beginning of your conversation with ${data.friendName}`}
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  Send a message to start the conversation
+                </p>
               </div>
-              <h3 className="text-lg font-semibold mb-2">
-                {`This is the beginning of your conversation with ${data.friendName}`}
-              </h3>
-              <p className="text-muted-foreground text-sm">
-                Send a message to start the conversation
-              </p>
-            </div>
 
-            {/* Sample messages - replace with real messages */}
+              {/* Sample messages - replace with real messages */}
 
-            <div className="space-y-4" ref={containerRef}>
-              {messages.map((message: any) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
-                >
+              <div className="space-y-4">
+                {messages.map((message: any) => (
                   <div
-                    className={`max-w-xs lg:max-w-md ${message.isOwn ? "order-2" : "order-1"}`}
+                    key={message.id}
+                    className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`px-3 py-2 rounded-lg ${
-                        message.isOwn
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
-                      }`}
+                      className={`max-w-xs lg:max-w-md ${message.isOwn ? "order-2" : "order-1"}`}
                     >
-                      <p className="text-sm">{message.content}</p>
+                      <div
+                        className={`px-3 py-2 rounded-lg ${
+                          message.isOwn
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted"
+                        }`}
+                      >
+                        <p className="text-sm">{message.content}</p>
+                      </div>
+                      <p
+                        className={`text-xs text-muted-foreground mt-1 px-3 ${message.isOwn ? "order-2" : "order-1"}`}
+                      >
+                        {DateFormatDistance(message.createdAt)}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1 px-3">
-                      {message.timestamp}
-                    </p>
                   </div>
-                </div>
-              ))}
-              <div ref={messageEndRef} />
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
             </div>
-          </div>
-        </ScrollArea>
+          </ScrollArea>
+        </div>
 
         {/* Message Input */}
         <MessageInput
           friendName={data.friendName}
           friendId={friendId}
           onSend={handleSend}
+          onInputFocus={handleInputFocus}
         />
       </div>
     </ChatwebSocket>
@@ -212,10 +272,12 @@ function MessageInput({
   friendName,
   friendId,
   onSend,
+  onInputFocus,
 }: {
   friendName: string;
   friendId: string;
   onSend: (value: string) => void;
+  onInputFocus: () => void;
 }) {
   const [message, setMessage] = useState("");
   const fetcher = useFetcher();
@@ -275,7 +337,7 @@ function MessageInput({
   };
 
   return (
-    <div className="border-t border-border p-4 flex-shrink-0 bg-backgrond sticky bottom-0">
+    <div className="flex-shrink-1 p-3 mb-3 sm:p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex gap-2">
         <div className="flex-1 relative">
           <fetcher.Form onSubmit={handleSubmit}>
@@ -286,6 +348,7 @@ function MessageInput({
               placeholder={`Message ${friendName}...`}
               value={message}
               onChange={handleInputChange}
+              onFocus={onInputFocus}
               className="pr-20"
               autoComplete="off"
             />
