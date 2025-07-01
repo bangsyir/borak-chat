@@ -7,7 +7,7 @@ import {
   Plus,
   Medal,
   Lock,
-  Mail,
+  UserPlus,
 } from "lucide-react";
 import {
   Sidebar,
@@ -23,10 +23,10 @@ import {
   SidebarMenuSkeleton,
 } from "~/components/ui/sidebar";
 import { Input } from "~/components/ui/input";
-import { Button, buttonVariants } from "~/components/ui/button";
+import { Button } from "~/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { cn } from "~/lib/utils";
-import { Link, NavLink, useLocation } from "react-router";
+import { NavLink, useLocation } from "react-router";
 import { NavUser } from "./chat-nav-user";
 import { ScrollArea } from "./ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
@@ -57,7 +57,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r border-border">
-      <SidebarHeader className="p-4 border-b border-border">
+      <SidebarHeader className="border-b border-border p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-0.5">
             <Medal className="h-5 w-5" />
@@ -67,15 +67,6 @@ export function AppSidebar() {
             <Settings className="h-4 w-4" />
           </Button>
         </div>
-        <div className="relative mt-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search conversations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
       </SidebarHeader>
 
       <SidebarContent className="p-0">
@@ -84,191 +75,220 @@ export function AppSidebar() {
           <NavLink
             to="/direct-message"
             className={cn(
-              "flex-1 flex items-center justify-center gap-2 p-3 text-sm font-medium transition-colors",
+              "flex flex-1 items-center justify-center gap-2 p-3 text-sm font-medium transition-colors",
               location.pathname.includes("/direct-message")
-                ? "bg-primary text-accent-foreground border-b-2"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+                ? "border-b-2 bg-primary text-accent-foreground"
+                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
             )}
           >
             <MessageSquare className="h-4 w-4" />
-            DMs
           </NavLink>
           <NavLink
             to="/rooms"
             className={cn(
-              "flex-1 flex items-center justify-center gap-2 p-3 text-sm font-medium transition-colors",
+              "flex flex-1 items-center justify-center gap-2 p-3 text-sm font-medium transition-colors",
               location.pathname.includes("/rooms")
-                ? "bg-primary text-accent-foreground border-b-2"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+                ? "border-b-2 bg-primary text-accent-foreground"
+                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
             )}
           >
             <Users className="h-4 w-4" />
-            Rooms
+          </NavLink>
+          <NavLink
+            to="/request"
+            className={cn(
+              "flex flex-1 items-center justify-center gap-2 p-3 text-sm font-medium transition-colors",
+              location.pathname.includes("/request")
+                ? "border-b-2 bg-primary text-accent-foreground"
+                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+            )}
+          >
+            <UserPlus className="h-4 w-4" />
           </NavLink>
         </div>
 
         {/* Content based on active tab */}
         {location.pathname.includes("direct-message") && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="flex items-center justify-between px-4 py-2">
-              <span>Friends ({filteredFriends.length})</span>
-              <div className="flex items-center gap-1">
-                <Link
-                  to={"#"}
-                  className={cn(
-                    buttonVariants({
-                      variant: "ghost",
-                      size: "icon",
-                      className: "hover:border focus:border-gray-500",
-                    }),
-                  )}
-                >
-                  <Mail className="w-4 h-4" />
-                </Link>
-                <AddFriendDialog />
-              </div>
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {friendsLoading ? (
-                  Array.from({ length: 3 }).map((_, index) => (
-                    <SidebarMenuItem key={index}>
-                      <SidebarMenuSkeleton />
-                    </SidebarMenuItem>
-                  ))
-                ) : (
-                  <ScrollArea>
-                    {filteredFriends.map((friend) => (
-                      <SidebarMenuItem key={friend.id}>
-                        <NavLink to={`/direct-message/${friend.id}`}>
-                          {({ isActive }) => (
-                            <SidebarMenuButton
-                              className={cn(
-                                "h-auto p-3 justify-start",
-                                isActive
-                                  ? "bg-primary text-accent-foreground hover:text-accent-foreground hover:bg-accent/50"
-                                  : "hover:bg-accent/50",
-                              )}
-                            >
-                              <div className="flex items-center gap-3 w-full">
-                                <div className="relative">
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarImage src={friend.avatar} />
-                                    <AvatarFallback className="text-xs">
-                                      {friend.name
-                                        .split(" ")
-                                        .map((n) => n[0])
-                                        .join("")}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div
-                                    className={cn(
-                                      "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background",
-                                      friend.isOnline
-                                        ? "bg-green-500"
-                                        : "bg-gray-400",
-                                    )}
-                                  />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium truncate">
-                                    {friend.name}
-                                  </p>
-                                  <p
-                                    className={`text-xs truncate ${!isActive && "text-muted-foreground"}`}
-                                  >
-                                    {friend.isOnline
-                                      ? "Online"
-                                      : `Last seen ${friend.lastSeen}`}
-                                  </p>
-                                </div>
-                              </div>
-                            </SidebarMenuButton>
-                          )}
-                        </NavLink>
+          <>
+            <SearchInput
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+            />
+            <SidebarGroup>
+              <SidebarGroupLabel className="flex items-center justify-between px-4 py-2">
+                <span>Friends ({filteredFriends.length})</span>
+                <div className="flex items-center gap-1">
+                  <AddFriendDialog />
+                </div>
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {friendsLoading ? (
+                    Array.from({ length: 3 }).map((_, index) => (
+                      <SidebarMenuItem key={index}>
+                        <SidebarMenuSkeleton />
                       </SidebarMenuItem>
-                    ))}
-                  </ScrollArea>
-                )}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+                    ))
+                  ) : (
+                    <ScrollArea>
+                      {filteredFriends.map((friend) => (
+                        <SidebarMenuItem key={friend.id}>
+                          <NavLink to={`/direct-message/${friend.id}`}>
+                            {({ isActive }) => (
+                              <SidebarMenuButton
+                                className={cn(
+                                  "h-auto justify-start p-3",
+                                  isActive
+                                    ? "bg-primary text-accent-foreground hover:bg-accent/50 hover:text-accent-foreground"
+                                    : "hover:bg-accent/50",
+                                )}
+                              >
+                                <div className="flex w-full items-center gap-3">
+                                  <div className="relative">
+                                    <Avatar className="h-8 w-8">
+                                      <AvatarImage src={friend.avatar} />
+                                      <AvatarFallback className="text-xs">
+                                        {friend.name
+                                          .split(" ")
+                                          .map((n) => n[0])
+                                          .join("")}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div
+                                      className={cn(
+                                        "absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-background",
+                                        friend.isOnline
+                                          ? "bg-green-500"
+                                          : "bg-gray-400",
+                                      )}
+                                    />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-medium">
+                                      {friend.name}
+                                    </p>
+                                    <p
+                                      className={`truncate text-xs ${!isActive && "text-muted-foreground"}`}
+                                    >
+                                      {friend.isOnline
+                                        ? "Online"
+                                        : `Last seen ${friend.lastSeen}`}
+                                    </p>
+                                  </div>
+                                </div>
+                              </SidebarMenuButton>
+                            )}
+                          </NavLink>
+                        </SidebarMenuItem>
+                      ))}
+                    </ScrollArea>
+                  )}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
         )}
 
         {location.pathname.includes("rooms") && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="flex items-center justify-between px-4 py-2">
-              <span>Rooms ({filteredRooms.length})</span>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
-                <Plus className="h-3 w-3" />
-              </Button>
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {roomsLoading ? (
-                  Array.from({ length: 3 }).map((_, index) => (
-                    <SidebarMenuItem key={index}>
-                      <SidebarMenuSkeleton />
-                    </SidebarMenuItem>
-                  ))
-                ) : (
-                  <ScrollArea>
-                    {filteredRooms.map((room) => (
-                      <SidebarMenuItem key={room.publicId}>
-                        <NavLink to={`/rooms/${room.publicId}`}>
-                          {({ isActive }) => (
-                            <SidebarMenuButton
-                              className={cn(
-                                "h-auto p-3 justify-start",
-                                isActive &&
-                                  "bg-primary text-accent-foreground hover:text-accent/50",
-                              )}
-                            >
-                              <div className="flex items-center gap-3 w-full">
-                                <div className="flex-shrink-0 h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
-                                  <Users className="h-4 w-4" />
-                                </div>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex min-w-0 items-center justify-between gap-2">
-                                        <p className="text-sm font-medium truncate flex-1">
-                                          {room.name.length > 15
-                                            ? room.name.slice(0, 15) + "..."
-                                            : room.name}
-                                        </p>
-                                        {room.isPrivate && (
-                                          <Lock className="h-4 w-4 text-secondary" />
-                                        )}
-                                      </div>
-                                      <p
-                                        className={`text-xs ${!isActive && "text-muted-foreground"}`}
-                                      >
-                                        {room.totalMember} members
-                                      </p>
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{room.name}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </div>
-                            </SidebarMenuButton>
-                          )}
-                        </NavLink>
+          <>
+            <SearchInput
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+            />
+            <SidebarGroup>
+              <SidebarGroupLabel className="flex items-center justify-between px-4 py-2">
+                <span>Rooms ({filteredRooms.length})</span>
+                <Button variant="ghost" size="icon" className="h-6 w-6">
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {roomsLoading ? (
+                    Array.from({ length: 3 }).map((_, index) => (
+                      <SidebarMenuItem key={index}>
+                        <SidebarMenuSkeleton />
                       </SidebarMenuItem>
-                    ))}
-                  </ScrollArea>
-                )}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+                    ))
+                  ) : (
+                    <ScrollArea>
+                      {filteredRooms.map((room) => (
+                        <SidebarMenuItem key={room.publicId}>
+                          <NavLink to={`/rooms/${room.publicId}`}>
+                            {({ isActive }) => (
+                              <SidebarMenuButton
+                                className={cn(
+                                  "h-auto justify-start p-3",
+                                  isActive &&
+                                    "bg-primary text-accent-foreground hover:text-accent/50",
+                                )}
+                              >
+                                <div className="flex w-full items-center gap-3">
+                                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-primary/10">
+                                    <Users className="h-4 w-4" />
+                                  </div>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex min-w-0 items-center justify-between gap-2">
+                                          <p className="flex-1 truncate text-sm font-medium">
+                                            {room.name.length > 15
+                                              ? room.name.slice(0, 15) + "..."
+                                              : room.name}
+                                          </p>
+                                          {room.isPrivate && (
+                                            <Lock className="h-4 w-4 text-secondary" />
+                                          )}
+                                        </div>
+                                        <p
+                                          className={`text-xs ${!isActive && "text-muted-foreground"}`}
+                                        >
+                                          {room.totalMember} members
+                                        </p>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{room.name}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </div>
+                              </SidebarMenuButton>
+                            )}
+                          </NavLink>
+                        </SidebarMenuItem>
+                      ))}
+                    </ScrollArea>
+                  )}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
         )}
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
       </SidebarFooter>
     </Sidebar>
+  );
+}
+
+function SearchInput({
+  searchQuery,
+  setSearchQuery,
+}: {
+  searchQuery: string;
+  setSearchQuery: (value: string) => void;
+}) {
+  return (
+    <div className="relative mt-3">
+      <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
+      <Input
+        placeholder="Search conversations..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="pl-10"
+      />
+    </div>
   );
 }
 
