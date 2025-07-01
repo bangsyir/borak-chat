@@ -3,25 +3,25 @@ import { SidebarTrigger } from "~/components/ui/sidebar";
 import { ModeToggle } from "./mode-toggle";
 import { Outlet, useLocation } from "react-router";
 
-export function ChatArea() {
+export function ChatWelcome() {
   const location = useLocation();
   if (
     location.pathname === "/direct-message" ||
     location.pathname === "/rooms"
   ) {
     return (
-      <div className="flex-1 flex flex-col h-screen">
-        <div className="border-b border-border p-3 flex items-center justify-between flex-shrink-0">
+      <div className="flex h-screen flex-1 flex-col">
+        <div className="flex flex-shrink-0 items-center justify-between border-b border-border p-3">
           <div className="flex items-center gap-3">
             <SidebarTrigger />
             <h2 className="font-semibold">ChatApp</h2>
           </div>
           <ModeToggle />
         </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center space-y-4 max-w-md">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-              <MessageSquare className="w-8 h-8 text-primary" />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="max-w-md space-y-4 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+              <MessageSquare className="h-8 w-8 text-primary" />
             </div>
             <div className="space-y-2">
               <h3 className="text-xl font-semibold">Welcome to ChatApp</h3>
