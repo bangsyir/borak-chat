@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { ChatArea } from "~/components/chat-area";
 import { useChatContext } from "~/components/chat-provider";
+import { ChatWelcome } from "~/components/chat-welcome";
 
 // Mock data for rooms
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -32,5 +32,5 @@ export default function RoomsRoute() {
     }
   }, [rooms]);
 
-  return <ChatArea />;
+  return <ChatWelcome />;
 }
