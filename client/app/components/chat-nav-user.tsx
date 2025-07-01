@@ -19,6 +19,7 @@ import React, { useRef } from "react";
 import { toast } from "sonner";
 import { ChevronsUpDown, LogOutIcon, UserCircleIcon } from "lucide-react";
 import { useLayoutData } from "~/hooks/use-layout-data";
+import { cn } from "~/lib/utils";
 
 export function NavUser() {
   const loaderData = useLayoutData();
@@ -53,20 +54,22 @@ export function NavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground border"
+              className={cn(
+                `border hover:bg-accent/50 data-[state=open]:bg-sidebar-accent/50 data-[state=open]:text-sidebar-accent-foreground`,
+              )}
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
                 {/* <AvatarImage src={user.avatar} alt={loaderData.data.username} /> */}
                 <AvatarFallback className="rounded-lg uppercase">
-                  {loaderData.data.username.slice(0, 2)}
+                  {loaderData.user.data.username.slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">
-                  {loaderData.data.username}
+                  {loaderData.user.data.username}
                 </span>
-                <span className="text-muted-foreground truncate text-xs">
-                  {loaderData.data.email}
+                <span className="truncate text-xs text-muted-foreground">
+                  {loaderData.user.data.email}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
@@ -83,18 +86,18 @@ export function NavUser() {
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage
                     // src={user.avatar}
-                    alt={loaderData.data?.username}
+                    alt={loaderData.user.data?.username}
                   />
                   <AvatarFallback className="rounded-lg uppercase">
-                    {loaderData.data.username.slice(0, 2)}
+                    {loaderData.user.data.username.slice(0, 2)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">
-                    {loaderData.data.username}
+                    {loaderData.user.data.username}
                   </span>
-                  <span className="text-muted-foreground truncate text-xs">
-                    {loaderData.data.email}
+                  <span className="truncate text-xs text-muted-foreground">
+                    {loaderData.user.data.email}
                   </span>
                 </div>
               </div>
