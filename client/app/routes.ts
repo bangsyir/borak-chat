@@ -12,6 +12,7 @@ export default [
       route(":friendId", "routes/direct-message.$friendId.tsx"),
     ]),
     route("/rooms", "routes/rooms.tsx"),
+    route("/request", "routes/request.tsx"),
   ]),
   route("/login", "routes/login.tsx"),
   route("/set-theme", "routes/set-theme.ts"),
