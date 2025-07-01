@@ -1,6 +1,7 @@
 import { data, Outlet, type LoaderFunctionArgs } from "react-router";
 import { AppSidebar } from "~/components/app-sidebar";
 import { ChatProvider } from "~/components/chat-provider";
+import { ChatwebSocketProvider } from "~/components/chat-websocket";
 import { SidebarProvider } from "~/components/ui/sidebar";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -12,6 +13,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     },
   });
   const result = await response.json();
+  const WS_URL = `ws://192.168.0.12:3000/ws?token=${token}`;
   if (result.success === false) {
     return data(
       {},
@@ -22,20 +24,22 @@ export async function loader({ request }: LoaderFunctionArgs) {
       },
     );
   }
-  return result;
+  return { user: result, WS_URL };
 }
 
 export default function Layout() {
   return (
-    <ChatProvider>
-      <SidebarProvider>
-        <div className="flex max-h-screen w-full bg-background">
-          <AppSidebar />
-          <main className="flex-1 flex flex-col min-w-0">
-            <Outlet />
-          </main>
-        </div>
-      </SidebarProvider>
-    </ChatProvider>
+    <ChatwebSocketProvider>
+      <ChatProvider>
+        <SidebarProvider>
+          <div className="flex max-h-screen w-full bg-background">
+            <AppSidebar />
+            <main className="flex min-w-0 flex-1 flex-col">
+              <Outlet />
+            </main>
+          </div>
+        </SidebarProvider>
+      </ChatProvider>
+    </ChatwebSocketProvider>
   );
 }
