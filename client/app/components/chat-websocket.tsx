@@ -1,7 +1,9 @@
 import { createContext, useContext, useEffect, useRef } from "react";
-import { useLoaderData } from "react-router";
-import { useOnlineStatusStore } from "~/hooks/useOnlineStatusStore";
-import { useTypingStore } from "~/hooks/useTypingStore";
+import { useLayoutData } from "~/hooks/use-layout-data";
+import { useMessagesStore } from "~/hooks/use-messages-store";
+import { useOnlineStatusStore } from "~/hooks/use-online-status-store";
+import { useTypingStore } from "~/hooks/use-typing-store";
+import { useFriendIdFromRoute } from "~/hooks/user-friendId-from-route";
 
 export type DirectMessageResponse = {
   id: number;
@@ -23,21 +25,16 @@ export const useWebSocketContext = () => {
   return context;
 };
 
-export function ChatwebSocket({
+export function ChatwebSocketProvider({
   children,
-  friendPublicId,
-  onNewMessage,
 }: {
   children: React.ReactNode;
-  friendPublicId: string;
-  onNewMessage: (value: DirectMessageResponse) => void;
 }) {
-  const { ENV, friendId } = useLoaderData<{
-    ENV: { WS_URL: string };
-    friendId: string;
-  }>();
+  const friendId = useFriendIdFromRoute();
+  const { WS_URL } = useLayoutData();
   const prevFriendIdRef = useRef<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const addMessage = useMessagesStore((state) => state.addMessage);
 
   const send = (message: any) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -47,7 +44,7 @@ export function ChatwebSocket({
 
   useEffect(() => {
     const connect = () => {
-      const ws = new WebSocket(ENV.WS_URL);
+      const ws = new WebSocket(WS_URL);
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -64,7 +61,7 @@ export function ChatwebSocket({
         ws.send(
           JSON.stringify({
             type: "chat_focus",
-            payload: { targetPublicId: friendPublicId },
+            payload: { targetPublicId: friendId },
           }),
         );
       };
@@ -86,7 +83,7 @@ export function ChatwebSocket({
                   createdAt: data.payload.createdAt,
                   sender: data.payload.sender,
                 };
-                onNewMessage(newMessage);
+                addMessage(newMessage);
               }
               break;
             case "presence_update":
@@ -124,7 +121,7 @@ export function ChatwebSocket({
           JSON.stringify({
             type: "chat_focus",
             payload: {
-              targetPublicId: friendPublicId,
+              targetPublicId: friendId,
               isFocusing: false,
             },
           }),
@@ -143,7 +140,7 @@ export function ChatwebSocket({
       // 3. Close connection
       wsRef.current?.close(1000, "Client navigated away");
     };
-  }, [ENV.WS_URL]);
+  }, [WS_URL]);
 
   useEffect(() => {
     const ws = wsRef.current;
@@ -166,18 +163,19 @@ export function ChatwebSocket({
     }
     console.log(`👁️  focus ${friendId}`);
     // 2. set new focus friendId
-    if (friendPublicId) {
+    if (friendId) {
       ws.send(
         JSON.stringify({
           type: "chat_focus",
           payload: {
-            targetPublicId: friendPublicId,
+            targetPublicId: friendId,
           },
         }),
       );
     }
-    prevFriendIdRef.current = friendPublicId;
-  }, [friendPublicId]);
+    prevFriendIdRef.current = friendId;
+  }, [friendId]);
+
   return (
     <WebSocketContext.Provider value={{ send }}>
       {children}
