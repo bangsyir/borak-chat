@@ -6,10 +6,7 @@ import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
 } from "react-router";
-import {
-  ChatwebSocket,
-  useWebSocketContext,
-} from "~/components/chat-websocket";
+import { useWebSocketContext } from "~/components/chat-websocket";
 import { ModeToggle } from "~/components/mode-toggle";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
@@ -18,8 +15,9 @@ import { ScrollArea } from "~/components/ui/scroll-area";
 import { Separator } from "~/components/ui/separator";
 import { SidebarTrigger } from "~/components/ui/sidebar";
 import { useLayoutData } from "~/hooks/use-layout-data";
-import { useOnlineStatusStore } from "~/hooks/useOnlineStatusStore";
-import { useTypingStore } from "~/hooks/useTypingStore";
+import { useMessagesStore } from "~/hooks/use-messages-store";
+import { useOnlineStatusStore } from "~/hooks/use-online-status-store";
+import { useTypingStore } from "~/hooks/use-typing-store";
 import { DateFormatDistance } from "~/lib/date-format";
 import { getSession } from "~/lib/session.server";
 
@@ -81,15 +79,18 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
 export default function DirectMessageFriend() {
   const { data, friendId } = useLoaderData();
-  const [messages, setMessages] = useState<DirectMessageResponse[]>(
-    data.messages,
-  );
+
+  const messages = useMessagesStore((state) => state.messages);
+  const setMessages = useMessagesStore((state) => state.setMessages);
+  const addMessage = useMessagesStore((state) => state.addMessage);
+
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const friendStatus = useOnlineStatusStore((state) =>
     state.getStatus(friendId),
   );
   const isTyping = useTypingStore((state) => state.typingStatus[friendId]);
+
   const layoutData = useLayoutData();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -140,13 +141,6 @@ export default function DirectMessageFriend() {
     setIsInitialLoad(true);
   }, []);
 
-  const handleNewMessage = (newMessage: DirectMessageResponse) => {
-    setMessages((prev) => {
-      if (prev.some((msg) => msg.id === newMessage.id)) return prev;
-      return [...prev, newMessage];
-    });
-  };
-
   const handleSend = (content: string) => {
     const tempId = Date.now();
     const optomisticMessage = {
@@ -155,14 +149,12 @@ export default function DirectMessageFriend() {
       isRead: false,
       isOwn: true,
       createdAt: new Date(),
-      sender: layoutData.data.username,
+      sender: layoutData.user.data.username,
     };
 
     // add immediatlety to UI
-    setMessages((prev) => {
-      if (prev.some((msg) => msg.id === optomisticMessage.id)) return prev;
-      return [...prev, optomisticMessage];
-    });
+    addMessage(optomisticMessage);
+
     setTimeout(() => {
       scrollToBottomSmooth();
     }, 50);
@@ -176,95 +168,93 @@ export default function DirectMessageFriend() {
   };
 
   return (
-    <ChatwebSocket friendPublicId={friendId} onNewMessage={handleNewMessage}>
-      <div className="flex flex-col h-svh w-full">
-        {/* Chat Header */}
-        <header className="flex-shrink-0 flex items-center justify-between gap-2 p-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <SidebarTrigger />
-          <Separator orientation="vertical" className="mx-1 h-8" />
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="text-xs">
-                {data.friendName.slice(0, 2)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex items-center gap-1">
-              <h2 className="font-semibold">{data.friendName}</h2>
-              {friendStatus?.isInThisChat ? (
-                <div className="rounded-full bg-green-500 w-2 h-2 flex flex-1"></div>
-              ) : friendStatus?.isOnline ? (
-                <div className="rounded-full bg-yellow-500 w-2 h-2 flex flex-1"></div>
-              ) : (
-                <div className="rounded-full bg-gray-500 w-2 h-2 flex flex-1"></div>
-              )}
-              {isTyping && (
-                <span className="text-gray-500 text-sm">is typing...</span>
-              )}
-            </div>
+    <div className="flex h-svh w-full flex-col">
+      {/* Chat Header */}
+      <header className="flex flex-shrink-0 items-center justify-between gap-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <SidebarTrigger />
+        <Separator orientation="vertical" className="mx-1 h-8" />
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="text-xs">
+              {data.friendName.slice(0, 2)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex items-center gap-1">
+            <h2 className="font-semibold">{data.friendName}</h2>
+            {friendStatus?.isInThisChat ? (
+              <div className="flex h-2 w-2 flex-1 rounded-full bg-green-500"></div>
+            ) : friendStatus?.isOnline ? (
+              <div className="flex h-2 w-2 flex-1 rounded-full bg-yellow-500"></div>
+            ) : (
+              <div className="flex h-2 w-2 flex-1 rounded-full bg-gray-500"></div>
+            )}
+            {isTyping && (
+              <span className="text-sm text-gray-500">is typing...</span>
+            )}
           </div>
-          <ModeToggle />
-        </header>
+        </div>
+        <ModeToggle />
+      </header>
 
-        {/* Messages Area */}
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <ScrollArea className="h-full p-3 sm:p-4">
-            <div className="p-4 space-y-4">
-              {/* Welcome message */}
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MessageSquare className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">
-                  {`This is the beginning of your conversation with ${data.friendName}`}
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  Send a message to start the conversation
-                </p>
+      {/* Messages Area */}
+      <div className="min-h-0 flex-1 overflow-hidden">
+        <ScrollArea className="h-full p-3 sm:p-4">
+          <div className="space-y-4 p-4">
+            {/* Welcome message */}
+            <div className="py-8 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <MessageSquare className="h-8 w-8 text-primary" />
               </div>
+              <h3 className="mb-2 text-lg font-semibold">
+                {`This is the beginning of your conversation with ${data.friendName}`}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Send a message to start the conversation
+              </p>
+            </div>
 
-              {/* Sample messages - replace with real messages */}
+            {/* Sample messages - replace with real messages */}
 
-              <div className="space-y-4">
-                {messages.map((message: any) => (
+            <div className="space-y-4">
+              {messages.map((message: any) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
+                >
                   <div
-                    key={message.id}
-                    className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
+                    className={`max-w-xs lg:max-w-md ${message.isOwn ? "order-2" : "order-1"}`}
                   >
                     <div
-                      className={`max-w-xs lg:max-w-md ${message.isOwn ? "order-2" : "order-1"}`}
+                      className={`rounded-lg px-3 py-2 ${
+                        message.isOwn
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted"
+                      }`}
                     >
-                      <div
-                        className={`px-3 py-2 rounded-lg ${
-                          message.isOwn
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted"
-                        }`}
-                      >
-                        <p className="text-sm">{message.content}</p>
-                      </div>
-                      <p
-                        className={`text-xs text-muted-foreground mt-1 px-3 ${message.isOwn ? "order-2" : "order-1"}`}
-                      >
-                        {DateFormatDistance(message.createdAt)}
-                      </p>
+                      <p className="text-sm">{message.content}</p>
                     </div>
+                    <p
+                      className={`mt-1 px-3 text-xs text-muted-foreground ${message.isOwn ? "text-end" : "text-start"}`}
+                    >
+                      {DateFormatDistance(message.createdAt)}
+                    </p>
                   </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
             </div>
-          </ScrollArea>
-        </div>
-
-        {/* Message Input */}
-        <MessageInput
-          friendName={data.friendName}
-          friendId={friendId}
-          onSend={handleSend}
-          onInputFocus={handleInputFocus}
-        />
+          </div>
+        </ScrollArea>
       </div>
-    </ChatwebSocket>
+
+      {/* Message Input */}
+      <MessageInput
+        friendName={data.friendName}
+        friendId={friendId}
+        onSend={handleSend}
+        onInputFocus={handleInputFocus}
+      />
+    </div>
   );
 }
 
@@ -337,9 +327,9 @@ function MessageInput({
   };
 
   return (
-    <div className="flex-shrink-1 p-3 mb-3 sm:p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="mb-3 flex-shrink-1 border-t bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:p-4">
       <div className="flex gap-2">
-        <div className="flex-1 relative">
+        <div className="relative flex-1">
           <fetcher.Form onSubmit={handleSubmit}>
             <Input
               ref={inputRef}
@@ -352,7 +342,7 @@ function MessageInput({
               className="pr-20"
               autoComplete="off"
             />
-            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
+            <div className="absolute top-1/2 right-2 flex -translate-y-1/2 transform gap-1">
               <Button size="icon" className="h-8 w-8" type="submit">
                 <Send className="h-4 w-4" />
               </Button>
