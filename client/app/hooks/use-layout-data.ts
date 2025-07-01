@@ -1,6 +1,6 @@
 import { useMatches } from "react-router";
 
-export interface UserLayoutData {
+export interface UserData {
   success: boolean;
   message: string;
   data: {
@@ -11,11 +11,15 @@ export interface UserLayoutData {
     updatedAt: Date;
   };
 }
+export interface ChatLayoutData {
+  user: UserData;
+  WS_URL: string;
+}
 
-export function useLayoutData(): UserLayoutData {
+export function useLayoutData(): ChatLayoutData {
   const matches = useMatches();
   const layoutMatch = matches.find((match) => match.id === "routes/layout") as {
-    data: UserLayoutData;
+    data: ChatLayoutData;
   };
   return layoutMatch?.data;
 }
