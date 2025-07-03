@@ -1,13 +1,4 @@
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
-import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -17,9 +8,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useFetcher, useNavigate } from "react-router";
 import React, { useRef } from "react";
 import { toast } from "sonner";
-import { ChevronsUpDown, LogOutIcon, UserCircleIcon } from "lucide-react";
+import { ChevronsUpDown, Copy, LogOut } from "lucide-react";
 import { useLayoutData } from "~/hooks/use-layout-data";
 import { cn } from "~/lib/utils";
+
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+
+import { Button } from "./ui/button";
 
 export function NavUser() {
   const loaderData = useLayoutData();
@@ -44,49 +48,34 @@ export function NavUser() {
     }
   }, [fetcher.data]);
 
+  function handleCopy() {
+    navigator.clipboard
+      .writeText(loaderData.user.data.public_id)
+      .then(() => {
+        toast("Text copied to clipboard!");
+      })
+      .catch((err) => {
+        console.error("Failed to copy text: ", err);
+      });
+  }
+
   function handleLogout() {
     fetcher.submit({}, { method: "post", action: "/logout" });
   }
   return (
     <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+      <SidebarMenuItem className={cn("p-2")}>
+        <Dialog>
+          <DialogTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className={cn(
-                `border hover:bg-accent/50 data-[state=open]:bg-sidebar-accent/50 data-[state=open]:text-sidebar-accent-foreground`,
-              )}
+              className={cn(`border hover:bg-accent/50 hover:text-foreground`)}
             >
-              <Avatar className="h-8 w-8 rounded-lg grayscale">
-                {/* <AvatarImage src={user.avatar} alt={loaderData.data.username} /> */}
-                <AvatarFallback className="rounded-lg uppercase">
-                  {loaderData.user.data.username.slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">
-                  {loaderData.user.data.username}
-                </span>
-                <span className="truncate text-xs text-muted-foreground">
-                  {loaderData.user.data.email}
-                </span>
-              </div>
-              <ChevronsUpDown className="ml-auto size-4" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
-            align="end"
-            sideOffset={4}
-          >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+              <div className="flex items-center gap-2 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage
                     // src={user.avatar}
-                    alt={loaderData.user.data?.username}
+                    alt={loaderData.user.data.username}
                   />
                   <AvatarFallback className="rounded-lg uppercase">
                     {loaderData.user.data.username.slice(0, 2)}
@@ -101,22 +90,67 @@ export function NavUser() {
                   </span>
                 </div>
               </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <UserCircleIcon />
-                Account
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuGroup>
-              <DropdownMenuItem variant="destructive" onClick={handleLogout}>
-                <LogOutIcon className="text-red-400" />
-                <button type="submit">Logout</button>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <ChevronsUpDown className="ml-auto size-4" />
+            </SidebarMenuButton>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Account Details</DialogTitle>
+              <DialogDescription></DialogDescription>
+            </DialogHeader>
+            <dl className="divide-background-foreground divide-y">
+              <div className="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                <dt className="text-sm leading-6 font-medium">User ID</dt>
+                <dd className="mt-1 flex items-center justify-between text-sm leading-6 text-muted-foreground sm:col-span-2 sm:mt-0">
+                  {loaderData.user.data.public_id}
+                  <Button variant="ghost" onClick={handleCopy}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </dd>
+              </div>
+              <div className="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                <dt className="text-sm leading-6 font-medium">Username</dt>
+                <dd className="mt-1 text-sm leading-6 text-muted-foreground sm:col-span-2 sm:mt-0">
+                  {loaderData.user.data.username}
+                </dd>
+              </div>
+              <div className="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                <dt className="text-sm leading-6 font-medium">Email</dt>
+                <dd className="mt-1 text-sm leading-6 text-muted-foreground sm:col-span-2 sm:mt-0">
+                  {loaderData.user.data.email}
+                </dd>
+              </div>
+              <div className="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                <dt className="text-sm leading-6 font-medium">Created</dt>
+                <dd className="mt-1 text-sm leading-6 text-muted-foreground sm:col-span-2 sm:mt-0">
+                  {new Date(
+                    loaderData.user.data.createdAt,
+                  ).toLocaleDateString()}
+                </dd>
+              </div>
+            </dl>
+
+            {/* <Separator className={cn("border")} /> */}
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button
+                  variant="outline"
+                  className="cursor-pointer hover:text-foreground"
+                >
+                  Close
+                </Button>
+              </DialogClose>
+              <Button
+                variant={"destructive"}
+                className="cursor-pointer"
+                onClick={handleLogout}
+              >
+                <LogOut />
+                Logout
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </SidebarMenuItem>
     </SidebarMenu>
   );
