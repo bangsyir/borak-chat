@@ -3,6 +3,7 @@ import { AppSidebar } from "~/components/app-sidebar";
 import { ChatProvider } from "~/components/chat-provider";
 import { ChatwebSocketProvider } from "~/components/chat-websocket";
 import { SidebarProvider } from "~/components/ui/sidebar";
+import type { AuthResponseType } from "~/types/user";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { destroySession, getToken } = await import("~/lib/session.server");
@@ -12,7 +13,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       Authorization: `Bearer ${token}`,
     },
   });
-  const result = await response.json();
+  const result: AuthResponseType = await response.json();
   const WS_URL = `ws://192.168.0.12:3000/ws?token=${token}`;
   if (result.success === false) {
     return data(
@@ -32,9 +33,9 @@ export default function Layout() {
     <ChatwebSocketProvider>
       <ChatProvider>
         <SidebarProvider>
-          <div className="flex max-h-screen w-full bg-background">
+          <div className="flex w-full">
             <AppSidebar />
-            <main className="flex min-w-0 flex-1 flex-col">
+            <main className="flex h-dvh min-w-0 flex-1 flex-col">
               <Outlet />
             </main>
           </div>
