@@ -1,13 +1,16 @@
-import { useState } from "react";
+import React from "react";
 import {
   MessageSquare,
   Users,
   Search,
-  Settings,
   Plus,
   Medal,
   Lock,
   UserPlus,
+  Clock3,
+  CircleArrowOutDownRight,
+  CircleArrowOutUpRight,
+  CircleCheckBig,
 } from "lucide-react";
 import {
   Sidebar,
@@ -30,21 +33,12 @@ import { NavLink, useLocation } from "react-router";
 import { NavUser } from "./chat-nav-user";
 import { ScrollArea } from "./ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./ui/dialog";
-import { Label } from "./ui/label";
 import { useChatContext } from "./chat-provider";
+import { SettingsDialog } from "./app-setting-dialog";
+import { RequestFriendDialog } from "./app-request-friend-dialog";
 
 export function AppSidebar() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = React.useState("");
   const location = useLocation();
   const { friends, friendsLoading, rooms, roomsLoading } = useChatContext();
   const filteredFriends = friends.filter((friend) =>
@@ -63,9 +57,7 @@ export function AppSidebar() {
             <Medal className="h-5 w-5" />
             <h1 className="text-xl font-bold">Borak Inc</h1>
           </div>
-          <Button variant="ghost" size="icon">
-            <Settings className="h-4 w-4" />
-          </Button>
+          <SettingsDialog />
         </div>
       </SidebarHeader>
 
@@ -118,7 +110,7 @@ export function AppSidebar() {
               <SidebarGroupLabel className="flex items-center justify-between px-4 py-2">
                 <span>Friends ({filteredFriends.length})</span>
                 <div className="flex items-center gap-1">
-                  <AddFriendDialog />
+                  <RequestFriendDialog />
                 </div>
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -289,37 +281,5 @@ function SearchInput({
         className="pl-10"
       />
     </div>
-  );
-}
-
-function AddFriendDialog() {
-  return (
-    <Dialog>
-      <form>
-        <DialogTrigger asChild>
-          <Button variant="ghost" size="icon" className={cn("hover:border")}>
-            <Plus className="h-3 w-3" />
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add Friends</DialogTitle>
-            <DialogDescription>Let's connect to the world</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4">
-            <div className="grid gap-3">
-              <Label htmlFor="userId">User Id</Label>
-              <Input id="userId" name="userId" defaultValue="KJKJS3HKJ" />
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button type="submit">Save changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </form>
-    </Dialog>
   );
 }
