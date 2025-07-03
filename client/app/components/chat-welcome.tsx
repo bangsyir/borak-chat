@@ -1,6 +1,5 @@
 import { MessageSquare } from "lucide-react";
 import { SidebarTrigger } from "~/components/ui/sidebar";
-import { ModeToggle } from "./mode-toggle";
 import { Outlet, useLocation } from "react-router";
 
 export function ChatWelcome() {
@@ -12,11 +11,11 @@ export function ChatWelcome() {
     return (
       <div className="flex h-screen flex-1 flex-col">
         <div className="flex flex-shrink-0 items-center justify-between border-b border-border p-3">
-          <div className="flex items-center gap-3">
+          <div className="relative flex items-center gap-3">
             <SidebarTrigger />
+            <div className="mx-1 h-8 border-r" />
             <h2 className="font-semibold">ChatApp</h2>
           </div>
-          <ModeToggle />
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="max-w-md space-y-4 text-center">
