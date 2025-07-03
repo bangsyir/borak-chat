@@ -14,6 +14,7 @@ export default [
     route("/rooms", "routes/rooms.tsx"),
     route("/request", "routes/request.tsx"),
   ]),
+  route("/request-friend", "routes/request-friend.tsx"),
   route("/login", "routes/login.tsx"),
   route("/set-theme", "routes/set-theme.ts"),
   route("/register", "routes/register.tsx"),
