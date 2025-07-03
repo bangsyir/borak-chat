@@ -7,13 +7,11 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 import { useWebSocketContext } from "~/components/chat-websocket";
-import { ModeToggle } from "~/components/mode-toggle";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
 import { ScrollArea } from "~/components/ui/scroll-area";
-import { Separator } from "~/components/ui/separator";
 import { SidebarTrigger } from "~/components/ui/sidebar";
+import { Textarea } from "~/components/ui/textarea";
 import { useLayoutData } from "~/hooks/use-layout-data";
 import { useMessagesStore } from "~/hooks/use-messages-store";
 import { useOnlineStatusStore } from "~/hooks/use-online-status-store";
@@ -116,7 +114,7 @@ export default function DirectMessageFriend() {
   // load messages when activechat change
   useEffect(() => {
     setMessages(data.messages);
-    setIsInitialLoad(true);
+    // setIsInitialLoad(true);
   }, [data.messages]);
 
   // handle scrolling base on context
@@ -127,7 +125,7 @@ export default function DirectMessageFriend() {
       }, 0);
       const timeoutId2 = setTimeout(() => {
         scrollToBottomInstant();
-        setIsInitialLoad(false);
+        // setIsInitialLoad(false);
       }, 100);
       return () => {
         clearTimeout(timeoutId1);
@@ -136,7 +134,7 @@ export default function DirectMessageFriend() {
     }
   }, [messages, isInitialLoad]);
 
-  //handle component mount (page refresh)
+  // handle component mount (page refresh)
   useEffect(() => {
     setIsInitialLoad(true);
   }, []);
@@ -168,41 +166,41 @@ export default function DirectMessageFriend() {
   };
 
   return (
-    <div className="flex h-svh w-full flex-col">
-      {/* Chat Header */}
-      <header className="flex flex-shrink-0 items-center justify-between gap-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <SidebarTrigger />
-        <Separator orientation="vertical" className="mx-1 h-8" />
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="text-xs">
-              {data.friendName.slice(0, 2)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex items-center gap-1">
-            <h2 className="font-semibold">{data.friendName}</h2>
-            {friendStatus?.isInThisChat ? (
-              <div className="flex h-2 w-2 flex-1 rounded-full bg-green-500"></div>
-            ) : friendStatus?.isOnline ? (
-              <div className="flex h-2 w-2 flex-1 rounded-full bg-yellow-500"></div>
-            ) : (
-              <div className="flex h-2 w-2 flex-1 rounded-full bg-gray-500"></div>
-            )}
-            {isTyping && (
-              <span className="text-sm text-gray-500">is typing...</span>
-            )}
+    <div className="relative flex flex-col">
+      <div className="relative w-full flex-shrink-0">
+        {/* Chat Header */}
+        <header className="fixed top-0 z-50 flex w-full items-center gap-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <SidebarTrigger />
+          <div className="mx-1 h-8 border-r" />
+          <div className="flex min-w-0 items-center gap-3">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="text-xs">
+                {data.friendName.slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex items-center gap-1">
+              <h2 className="font-semibold">{data.friendName}</h2>
+              {friendStatus?.isInThisChat ? (
+                <div className="flex h-2 w-2 flex-1 rounded-full bg-green-500"></div>
+              ) : friendStatus?.isOnline ? (
+                <div className="flex h-2 w-2 flex-1 rounded-full bg-yellow-500"></div>
+              ) : (
+                <div className="flex h-2 w-2 flex-1 rounded-full bg-gray-500"></div>
+              )}
+              {isTyping && (
+                <span className="text-sm text-gray-500">is typing...</span>
+              )}
+            </div>
           </div>
-        </div>
-        <ModeToggle />
-      </header>
-
+        </header>
+      </div>
       {/* Messages Area */}
-      <div className="min-h-0 flex-1 overflow-hidden">
-        <ScrollArea className="h-full p-3 sm:p-4">
-          <div className="space-y-4 p-4">
+      <div className="relative flex h-full flex-col items-center">
+        <ScrollArea className="flex h-dvh w-full flex-col items-center overflow-x-hidden overflow-y-auto p-3 sm:p-4">
+          <div className="relative flex flex-col items-center space-y-4 p-4">
             {/* Welcome message */}
-            <div className="py-8 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+            <div className="flex flex-col items-center py-8 text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
                 <MessageSquare className="h-8 w-8 text-primary" />
               </div>
               <h3 className="mb-2 text-lg font-semibold">
@@ -215,7 +213,7 @@ export default function DirectMessageFriend() {
 
             {/* Sample messages - replace with real messages */}
 
-            <div className="space-y-4">
+            <div className="flex w-full flex-col space-y-4 lg:w-1/2">
               {messages.map((message: any) => (
                 <div
                   key={message.id}
@@ -241,19 +239,20 @@ export default function DirectMessageFriend() {
                   </div>
                 </div>
               ))}
-              <div ref={messagesEndRef} />
+              <div ref={messagesEndRef} className="h-px pb-18" />
             </div>
           </div>
         </ScrollArea>
+        {/* Message Input */}
+        <div className="absolute inset-x-0 bottom-0 z-40">
+          <MessageInput
+            friendName={data.friendName}
+            friendId={friendId}
+            onSend={handleSend}
+            onInputFocus={handleInputFocus}
+          />
+        </div>
       </div>
-
-      {/* Message Input */}
-      <MessageInput
-        friendName={data.friendName}
-        friendId={friendId}
-        onSend={handleSend}
-        onInputFocus={handleInputFocus}
-      />
     </div>
   );
 }
@@ -271,7 +270,7 @@ function MessageInput({
 }) {
   const [message, setMessage] = useState("");
   const fetcher = useFetcher();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeout = useRef<NodeJS.Timeout | null>(null);
   const { send } = useWebSocketContext();
 
@@ -284,7 +283,7 @@ function MessageInput({
     }
   }, [fetcher.state, fetcher.data]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setMessage(value);
 
@@ -326,12 +325,19 @@ function MessageInput({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // check if enter key was press
+    if (e.key === "Enter" && !e.shiftKey) {
+      handleSubmit(e);
+    }
+  };
+
   return (
-    <div className="mb-3 flex-shrink-1 border-t bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:p-4">
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <fetcher.Form onSubmit={handleSubmit}>
-            <Input
+    <div className="relative mb-3 flex w-full items-center justify-center lg:mb-0">
+      <div className="w-full rounded-2xl bg-accent-foreground/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-foreground/10 sm:p-4 lg:w-1/2">
+        <fetcher.Form onSubmit={handleSubmit}>
+          <div className="relative">
+            <Textarea
               ref={inputRef}
               id="content"
               name="content"
@@ -341,14 +347,21 @@ function MessageInput({
               onFocus={onInputFocus}
               className="pr-20"
               autoComplete="off"
+              onKeyDown={handleKeyDown}
+              disabled={fetcher.state === "submitting"}
             />
             <div className="absolute top-1/2 right-2 flex -translate-y-1/2 transform gap-1">
-              <Button size="icon" className="h-8 w-8" type="submit">
+              <Button
+                size="icon"
+                className="h-8 w-8"
+                type="submit"
+                disabled={fetcher.state === "submitting"}
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
-          </fetcher.Form>
-        </div>
+          </div>
+        </fetcher.Form>
       </div>
     </div>
   );
