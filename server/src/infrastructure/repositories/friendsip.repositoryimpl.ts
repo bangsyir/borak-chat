@@ -25,6 +25,7 @@ export const FriendshipRepositoryImpl: FriendshipRespository = {
       select: {
         status: true,
         createdAt: true,
+        token: true,
         requester: {
           select: {
             public_id: true,

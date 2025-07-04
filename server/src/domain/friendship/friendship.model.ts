@@ -6,6 +6,7 @@ export type FriendshipRequestInput = {
 export type IncomingListType = {
   status: string;
   createdAt: Date;
+  token: string | null;
   requester: {
     public_id: string;
     username: string;
