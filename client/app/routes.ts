@@ -13,6 +13,7 @@ export default [
     ]),
     route("/rooms", "routes/rooms.tsx"),
     route("/request", "routes/request.tsx"),
+    route("/request/:status", "routes/request.$status.tsx"),
   ]),
   route("/request-friend", "routes/request-friend.tsx"),
   route("/login", "routes/login.tsx"),
