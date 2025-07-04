@@ -9,11 +9,9 @@ interface RequestFriendResultType {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const { getSession } = await import("~/lib/session.server");
-  const session = await getSession(request.headers.get("Cookie"));
-  if (!session.has("__session")) {
-    return redirect("/login");
-  }
+  const { authUser } = await import("~/lib/session.server");
+  const { token } = await authUser(request);
+
   const formData = await request.formData();
   const friendPublicId = formData.get("friendPublicId");
   if (!friendPublicId || typeof friendPublicId !== "string") {
@@ -30,7 +28,7 @@ export async function action({ request }: ActionFunctionArgs) {
       method: "post",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${session.get("__session").token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ friendPublicId }),
     },
