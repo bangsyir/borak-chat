@@ -7,10 +7,8 @@ import {
   Medal,
   Lock,
   UserPlus,
-  Clock3,
-  CircleArrowOutDownRight,
-  CircleArrowOutUpRight,
-  CircleCheckBig,
+  ClockArrowUp,
+  ClockArrowDown,
 } from "lucide-react";
 import {
   Sidebar,
@@ -255,6 +253,46 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
           </>
+        )}
+        {location.pathname.includes("/request") && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <NavLink to="/request/incoming">
+                    {({ isActive }) => (
+                      <SidebarMenuButton
+                        className={cn(
+                          "h-auto justify-start p-3",
+                          isActive &&
+                            "bg-primary text-accent-foreground hover:text-accent/50",
+                        )}
+                      >
+                        <ClockArrowUp />
+                        Incoming
+                      </SidebarMenuButton>
+                    )}
+                  </NavLink>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <NavLink to="/request/outgoing">
+                    {({ isActive }) => (
+                      <SidebarMenuButton
+                        className={cn(
+                          "h-auto justify-start p-3",
+                          isActive &&
+                            "bg-primary text-accent-foreground hover:text-accent/50",
+                        )}
+                      >
+                        <ClockArrowDown />
+                        Outgoing
+                      </SidebarMenuButton>
+                    )}
+                  </NavLink>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         )}
       </SidebarContent>
       <SidebarFooter>
