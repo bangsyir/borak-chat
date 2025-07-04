@@ -6,8 +6,8 @@ import { SidebarProvider } from "~/components/ui/sidebar";
 import type { AuthResponseType } from "~/types/user";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { destroySession, getToken } = await import("~/lib/session.server");
-  const { session, token } = await getToken(request);
+  const { authUser, destroySession } = await import("~/lib/session.server");
+  const { session, token } = await authUser(request);
   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/me`, {
     headers: {
       Authorization: `Bearer ${token}`,

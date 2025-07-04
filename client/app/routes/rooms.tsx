@@ -5,16 +5,13 @@ import { ChatWelcome } from "~/components/chat-welcome";
 
 // Mock data for rooms
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { getSession } = await import("~/lib/session.server");
-  const session = await getSession(request.headers.get("Cookie"));
-  if (!session.has("__session")) {
-    return redirect("/login");
-  }
+  const { authUser } = await import("~/lib/session.server");
+  const { token } = await authUser(request);
   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/rooms`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${session.get("__session").token}`,
+      Authorization: `Bearer ${token}`,
     },
   });
   const result = await response.json();

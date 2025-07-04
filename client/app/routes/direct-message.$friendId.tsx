@@ -17,7 +17,6 @@ import { useMessagesStore } from "~/hooks/use-messages-store";
 import { useOnlineStatusStore } from "~/hooks/use-online-status-store";
 import { useTypingStore } from "~/hooks/use-typing-store";
 import { DateFormatDistance } from "~/lib/date-format";
-import { getSession } from "~/lib/session.server";
 
 export type DirectMessageResponse = {
   id: number;
@@ -29,8 +28,8 @@ export type DirectMessageResponse = {
 };
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const token = await session.get("__session").token;
+  const { authUser } = await import("~/lib/session.server");
+  const { token } = await authUser(request);
   const friendId = params.friendId;
 
   const response = await fetch(
@@ -53,8 +52,9 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const token = await session.get("__session").token;
+  const { authUser } = await import("~/lib/session.server");
+  const { token } = await authUser(request);
+
   const friendId = params.friendId;
 
   const formData = await request.formData();
