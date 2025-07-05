@@ -126,12 +126,8 @@ export function AppSidebar() {
                           <NavLink to={`/direct-message/${friend.id}`}>
                             {({ isActive }) => (
                               <SidebarMenuButton
-                                className={cn(
-                                  "h-auto justify-start p-3",
-                                  isActive
-                                    ? "bg-primary text-accent-foreground hover:bg-accent/50 hover:text-accent-foreground"
-                                    : "hover:bg-accent/50",
-                                )}
+                                isActive={isActive}
+                                className={cn("h-auto justify-start p-3")}
                               >
                                 <div className="flex w-full items-center gap-3">
                                   <div className="relative">
@@ -207,11 +203,8 @@ export function AppSidebar() {
                           <NavLink to={`/rooms/${room.publicId}`}>
                             {({ isActive }) => (
                               <SidebarMenuButton
-                                className={cn(
-                                  "h-auto justify-start p-3",
-                                  isActive &&
-                                    "bg-primary text-accent-foreground hover:text-accent/50",
-                                )}
+                                isActive={isActive}
+                                className={cn("h-auto justify-start p-3")}
                               >
                                 <div className="flex w-full items-center gap-3">
                                   <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-primary/10">
@@ -227,7 +220,7 @@ export function AppSidebar() {
                                               : room.name}
                                           </p>
                                           {room.isPrivate && (
-                                            <Lock className="h-4 w-4 text-secondary" />
+                                            <Lock className="h-4 w-4 text-foreground" />
                                           )}
                                         </div>
                                         <p
@@ -262,11 +255,8 @@ export function AppSidebar() {
                   <NavLink to="/request/incoming">
                     {({ isActive }) => (
                       <SidebarMenuButton
-                        className={cn(
-                          "h-auto justify-start p-3",
-                          isActive &&
-                            "bg-primary text-accent-foreground hover:text-accent/50",
-                        )}
+                        isActive={isActive}
+                        className={cn("h-auto justify-start p-3")}
                       >
                         <ClockArrowUp />
                         Incoming
@@ -278,11 +268,8 @@ export function AppSidebar() {
                   <NavLink to="/request/outgoing">
                     {({ isActive }) => (
                       <SidebarMenuButton
-                        className={cn(
-                          "h-auto justify-start p-3",
-                          isActive &&
-                            "bg-primary text-accent-foreground hover:text-accent/50",
-                        )}
+                        isActive={isActive}
+                        className={cn("h-auto justify-start p-3")}
                       >
                         <ClockArrowDown />
                         Outgoing
