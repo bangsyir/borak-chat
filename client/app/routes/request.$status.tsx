@@ -12,15 +12,17 @@ import { SidebarTrigger } from "~/components/ui/sidebar";
 import { Badge } from "~/components/ui/badge";
 import {
   data,
+  Form,
   isRouteErrorResponse,
   Link,
   useParams,
   useRouteError,
 } from "react-router";
 import type { Route } from "./+types/request.$status";
-import type React from "react";
+import React from "react";
 import { cn } from "~/lib/utils";
 import type { FriendRequestStatus } from "~/types/friendship";
+import { toast } from "sonner";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { authUser } = await import("~/lib/session.server");
@@ -48,6 +50,39 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const result: FriendRequestStatus = await response.json();
 
   return { ...result };
+}
+
+export async function action({ request }: Route.ActionArgs) {
+  const { authUser } = await import("~/lib/session.server");
+  const { token } = await authUser(request);
+
+  const formData = await request.formData();
+  const intent = formData.get("intent") as string;
+  if (!intent) {
+    throw data("Bad Request", { status: 400 });
+  }
+  const verifyToken = formData.get("verifyToken");
+
+  const intentList = ["accept", "reject"];
+
+  if (intentList.includes(intent)) {
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/friend-request/${verifyToken}/${intent}`,
+      {
+        method: "put",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    const result: { success: boolean; message: string } = await response.json();
+    return { ...result };
+  }
+
+  // console.log({ intent, verifyToken });
+  return;
 }
 
 function StatusBage({
@@ -96,8 +131,23 @@ function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-export default function RequestPage({ loaderData }: Route.ComponentProps) {
+export default function RequestPage({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
   const params = useParams();
+  React.useEffect(() => {
+    if (actionData) {
+      if (!actionData?.success) {
+        toast.error("Opss something wrong", {
+          description: actionData?.message,
+        });
+      }
+      if (actionData?.success) {
+        toast.success("Wow Success", { description: actionData?.message });
+      }
+    }
+  }, [actionData?.success, actionData?.message]);
   return (
     <Layout>
       <div className="mx-auto flex w-full flex-col px-8 pt-4 lg:w-1/2">
@@ -129,18 +179,36 @@ export default function RequestPage({ loaderData }: Route.ComponentProps) {
                       </div>
                       <div className="flex items-center">
                         <StatusBage status={item.status} />
-                        <Button
-                          variant="ghost"
-                          className="cursor-pointer hover:text-green-500"
-                        >
-                          <CircleCheck className="h-10 w-10" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          className="cursor-pointer hover:text-red-500"
-                        >
-                          <CircleX className="h-10 w-10" />
-                        </Button>
+                        <Form method="post">
+                          <input
+                            type="hidden"
+                            name="verifyToken"
+                            value={item.token}
+                          />
+                          <Button
+                            variant="ghost"
+                            name="intent"
+                            value="accept"
+                            className="cursor-pointer hover:text-green-500"
+                          >
+                            <CircleCheck className="h-10 w-10" />
+                          </Button>
+                        </Form>
+                        <Form method="post">
+                          <input
+                            type="hidden"
+                            name="verifyToken"
+                            value={item.token}
+                          />
+                          <Button
+                            variant="ghost"
+                            className="cursor-pointer hover:text-red-500"
+                            name="intent"
+                            value="reject"
+                          >
+                            <CircleX className="h-10 w-10" />
+                          </Button>
+                        </Form>
                       </div>
                     </div>
 

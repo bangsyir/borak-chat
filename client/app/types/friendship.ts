@@ -1,7 +1,7 @@
 export interface ResponseStatusType {
   status: string;
   createdAt: Date;
-  token?: string | null;
+  token: string;
   requestee?: {
     public_id: string;
     username: string;
