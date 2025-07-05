@@ -63,13 +63,12 @@ export const FriendshipRepositoryImpl: FriendshipRespository = {
     });
   },
   updateStatus: async (token, status) => {
-    await prisma.friendship.update({
+    return await prisma.friendship.update({
       where: {
         token: token,
       },
       data: {
         status: status,
-        token: "",
       },
     });
   },

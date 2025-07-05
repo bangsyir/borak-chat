@@ -85,7 +85,7 @@ friendshipRoutes.put(
       return c.json(createSuccessResponse("Request friend accepted"));
     } catch (error) {
       if (error instanceof Error) {
-        return c.json(createSuccessResponse(error.message), 400);
+        return c.json(createErrorResponse(error.message), 400);
       }
     }
   },
@@ -109,7 +109,7 @@ friendshipRoutes.put(
       return c.json(createSuccessResponse("Request friend rejected"));
     } catch (error) {
       if (error instanceof Error) {
-        return c.json(createSuccessResponse(error.message), 400);
+        return c.json(createErrorResponse(error.message), 400);
       }
     }
   },
