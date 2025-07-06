@@ -17,6 +17,7 @@ import { useMessagesStore } from "~/hooks/use-messages-store";
 import { useOnlineStatusStore } from "~/hooks/use-online-status-store";
 import { useTypingStore } from "~/hooks/use-typing-store";
 import { DateFormatDistance } from "~/lib/date-format";
+import { cn } from "~/lib/utils";
 
 export type DirectMessageResponse = {
   id: number;
@@ -272,6 +273,7 @@ function MessageInput({
   const fetcher = useFetcher();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeout = useRef<NodeJS.Timeout | null>(null);
+  const typingRef = useRef<boolean>(false);
   const { send } = useWebSocketContext();
 
   useEffect(() => {
@@ -288,15 +290,23 @@ function MessageInput({
     setMessage(value);
 
     // start typing notification
-    if (value.length === 1) {
+    if (!typingRef.current) {
+      typingRef.current = true;
       send({
         type: "typing_start",
+        payload: { targetPublicId: friendId },
+      });
+    }
+    if (value.length === 0) {
+      send({
+        type: "typing_stop",
         payload: { targetPublicId: friendId },
       });
     }
     // reset typing timeout
     if (typingTimeout.current) clearTimeout(typingTimeout.current);
     typingTimeout.current = setTimeout(() => {
+      typingRef.current = false;
       if (value.length > 0) {
         send({
           type: "typing_stop",
@@ -334,7 +344,7 @@ function MessageInput({
 
   return (
     <div className="relative mb-3 flex w-full items-center justify-center lg:mb-0">
-      <div className="w-full rounded-2xl bg-accent-foreground/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-foreground/10 sm:p-4 lg:w-1/2">
+      <div className="w-full rounded-2xl p-3 backdrop-blur supports-[backdrop-filter]:bg-foreground/20 sm:p-4 lg:w-1/2">
         <fetcher.Form onSubmit={handleSubmit}>
           <div className="relative">
             <Textarea
@@ -345,7 +355,7 @@ function MessageInput({
               value={message}
               onChange={handleInputChange}
               onFocus={onInputFocus}
-              className="pr-20"
+              className={cn("pr-20")}
               autoComplete="off"
               onKeyDown={handleKeyDown}
               disabled={fetcher.state === "submitting"}

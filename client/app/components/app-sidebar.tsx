@@ -140,25 +140,10 @@ export function AppSidebar() {
                                           .join("")}
                                       </AvatarFallback>
                                     </Avatar>
-                                    <div
-                                      className={cn(
-                                        "absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-background",
-                                        friend.isOnline
-                                          ? "bg-green-500"
-                                          : "bg-gray-400",
-                                      )}
-                                    />
                                   </div>
                                   <div className="min-w-0 flex-1">
                                     <p className="truncate text-sm font-medium">
                                       {friend.name}
-                                    </p>
-                                    <p
-                                      className={`truncate text-xs ${!isActive && "text-muted-foreground"}`}
-                                    >
-                                      {friend.isOnline
-                                        ? "Online"
-                                        : `Last seen ${friend.lastSeen}`}
                                     </p>
                                   </div>
                                 </div>
