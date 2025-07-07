@@ -21,7 +21,10 @@ export type RoomsRepository = {
   getDetails: (publicRoomId: string) => Promise<RoomDetailsResponse | null>;
   getMembers: (RoomId: number) => Promise<MembersListResponse[]>;
   findRoom: (publicRoomId: string) => Promise<RoomDetailsResponse | null>;
-  getRoomMessages: (roomId: number) => Promise<RoomMessagesResponse[]>;
+  getRoomMessages: (
+    roomId: number,
+    userId: number,
+  ) => Promise<RoomMessagesResponse[]>;
   sendMessage: (
     userId: number,
     roomId: number,

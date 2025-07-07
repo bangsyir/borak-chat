@@ -29,7 +29,8 @@ export type RoomDetailsResponse = {
 
 export type RoomMessagesResponse = {
   id: number;
-  content: string;
   sender: string;
-  createdAt: Date;
+  content: string;
+  created_at: Date;
+  is_own: boolean;
 };

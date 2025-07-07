@@ -105,30 +105,27 @@ export const RoomsRepositoryImpl: RoomsRepository = {
       },
     });
   },
-  getRoomMessages: async (roomId) => {
-    const roomMessages = await prisma.roomMessage.findMany({
-      where: {
-        roomId: roomId,
-      },
-      select: {
-        id: true,
-        content: true,
-        sender: {
-          select: {
-            username: true,
-          },
-        },
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-    const messages: RoomMessagesResponse[] = roomMessages.map((item) => ({
+  getRoomMessages: async (roomId, userId) => {
+    const roomMessages = await prisma.$queryRaw<RoomMessagesResponse[]>`
+      SELECT 
+        rm.id, 
+        u.username as sender, 
+        rm.content,
+        rm.created_at,
+        CASE 
+        WHEN rm.sender_id = ${userId} THEN TRUE ELSE FALSE
+        END as is_own
+      FROM room_messages as rm
+      JOIN users as u ON rm.sender_id = u.id
+      WHERE rm.room_id = ${roomId}
+      ORDER BY rm.created_at ASC
+    `;
+    const messages = roomMessages.map((item) => ({
       id: item.id,
+      sender: item.sender,
       content: item.content,
-      sender: item.sender.username,
-      createdAt: item.createdAt,
+      created_at: item.created_at,
+      is_own: Boolean(item.is_own),
     }));
     return messages;
   },

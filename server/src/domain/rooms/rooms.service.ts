@@ -134,7 +134,7 @@ export const RoomsService = (
           statusCode: 400,
         };
       }
-      const messages = await repo.getRoomMessages(room.id);
+      const messages = await repo.getRoomMessages(room.id, userId);
 
       (async () => {
         try {
