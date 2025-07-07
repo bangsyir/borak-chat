@@ -113,10 +113,13 @@ export const RoomsService = (
       };
     }
   },
+
   getMessages: async (
     userId: number,
     publicRoomId: string,
-  ): Promise<ResultType<RoomMessagesResponse[], any>> => {
+  ): Promise<
+    ResultType<{ room_name: string; messages: RoomMessagesResponse[] }, any>
+  > => {
     try {
       const room = await repo.findRoom(publicRoomId);
       if (!room) {
@@ -146,7 +149,10 @@ export const RoomsService = (
       return {
         ok: true,
         message: "success",
-        data: messages,
+        data: {
+          room_name: room.name,
+          messages,
+        },
         statusCode: 200,
       };
     } catch (error: any) {
