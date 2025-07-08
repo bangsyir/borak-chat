@@ -10,6 +10,7 @@ import { verify } from "hono/jwt";
 import {
   addConnection,
   addFriendship,
+  handleRoomJoin,
   removeConnection,
   setChatAreaPresence,
   setChatFocus,
@@ -114,6 +115,10 @@ const serverConfig = {
       if (parsed.type === "typing_stop") {
         const targetPublicId = parsed.payload.targetPublicId;
         setTypingStatus(userPublicId, targetPublicId, false);
+      }
+      if (parsed.type === "join_room") {
+        console.log("hai");
+        handleRoomJoin(ws, { userPublicId, roomId: parsed.roomId });
       }
     },
     async close(ws: ServerWebSocket<WebSocketData>) {

@@ -1,4 +1,5 @@
 import { ServerWebSocket } from "bun";
+import { roomsRoutes } from "../../interfaces/http/routes/rooms.route";
 export type WebSocketData = {
   userId: number;
   userPublicId: string;
@@ -16,6 +17,8 @@ export const chatFocus = new Map<string, string | null>();
 export const friendshipMap = new Map<string, Set<string>>();
 // track typing satus: user -> target they are typing
 export const typingStatus = new Map<string, string | null>();
+// track room membership: roomid -> set of userPublicId
+const rooms = new Map<string, Set<string>>();
 
 // Helper function to get data from either type
 export const getWebSocketData = (
@@ -24,9 +27,9 @@ export const getWebSocketData = (
   return ws.data;
 };
 
-export const sendToUser = (userPublicId: string, message: any) => {
-  const userConnections = connections.get(userPublicId);
-
+// publicId it can be user public id or room public id
+export const sendToUser = (publicId: string, message: any) => {
+  const userConnections = connections.get(publicId);
   if (!userConnections) return;
   userConnections.forEach((ws) => {
     if (ws.readyState === 1) {
@@ -97,6 +100,15 @@ export const addConnection = async (
   sendFriendsPresenceToUser(userPublicId);
 };
 
+// Broadcast message to all in a room
+export const broadcastToRoom = (roomId: string, message: any) => {
+  const roomMembers = rooms.get(roomId);
+  if (!roomMembers) return;
+  roomMembers.forEach((userPublicId) => {
+    sendToUser(userPublicId, message);
+  });
+};
+
 // remove connection function
 export const removeConnection = async (
   userPublicId: string,
@@ -124,6 +136,13 @@ export const removeConnection = async (
     notifyTypingStatus(userPublicId, typingTarget, false);
     typingStatus.delete(userPublicId);
   }
+
+  // clear room connection
+  rooms.forEach((members) => {
+    if (members.has(userPublicId)) {
+      members.delete(userPublicId);
+    }
+  });
 };
 
 export const sendFriendsPresenceToUser = (userPublicId: string) => {
@@ -186,4 +205,55 @@ export const setChatFocus = (
   if (targetPublicId) {
     notifyFriendsOfPresenceChange(targetPublicId);
   }
+
+  // if focusing on a room, update room presence
+  if (targetPublicId && rooms.has(targetPublicId)) {
+    if (!rooms.get(targetPublicId)?.has(viewerPublicId)) {
+      rooms.get(targetPublicId)?.add(viewerPublicId);
+    }
+  }
+};
+
+// handle room
+export const joinRoom = (userPublicId: string, roomId: string) => {
+  if (!rooms.has(roomId)) {
+    rooms.set(roomId, new Set());
+  }
+  rooms.get(roomId)?.add(userPublicId);
+};
+
+export const leaveRoom = (userPublicId: string, roomId: string) => {
+  const roomMembers = rooms.get(roomId);
+  if (roomMembers && roomMembers.has(userPublicId)) {
+    roomMembers.delete(userPublicId);
+
+    // clear up room if emty
+    if (roomMembers.size === 0) {
+      rooms.delete(roomId);
+    }
+  }
+};
+
+export const handleRoomJoin = (
+  ws: ServerWebSocket<WebSocketData>,
+  data: any,
+) => {
+  console.log(rooms);
+  const { userPublicId, roomId } = data;
+
+  if (!userPublicId || !roomId) {
+    console.error("Invalid room join data:", data);
+    return;
+  }
+
+  // verify the userPublicId matched the connections
+  if (userPublicId !== ws.data.userPublicId) {
+    console.error("UserPublicId mismatch");
+    return;
+  }
+
+  //join room
+  joinRoom(userPublicId, roomId);
+  // update chat focus
+  setChatFocus(userPublicId, roomId);
 };
