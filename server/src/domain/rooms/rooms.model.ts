@@ -12,8 +12,9 @@ export type ListRoomsResponse = {
   isPrivate: boolean;
 };
 export type FindMemberResponse = {
-  id: number;
-  isAdmin: boolean;
+  id?: number;
+  isAdmin?: boolean;
+  username?: string;
 };
 export type MembersListResponse = {
   publicId: string;
