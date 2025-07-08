@@ -11,7 +11,9 @@ export default [
     route("/direct-message", "routes/direct-message.tsx", [
       route(":friendId", "routes/direct-message.$friendId.tsx"),
     ]),
-    route("/rooms", "routes/rooms.tsx"),
+    route("/rooms", "routes/rooms.tsx", [
+      route(":roomId", "routes/rooms.$roomId.tsx"),
+    ]),
     route("/request", "routes/request.tsx"),
     route("/request/:status", "routes/request.$status.tsx"),
   ]),

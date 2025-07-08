@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useRef } from "react";
 import { useLayoutData } from "~/hooks/use-layout-data";
 import { useMessagesStore } from "~/hooks/use-messages-store";
 import { useOnlineStatusStore } from "~/hooks/use-online-status-store";
+import { useRoomMessagesStore } from "~/hooks/use-room-messages-store";
+import { useRoomIdData } from "~/hooks/use-roomId-data";
 import { useTypingStore } from "~/hooks/use-typing-store";
 import { useFriendIdFromRoute } from "~/hooks/user-friendId-from-route";
 
@@ -31,10 +33,13 @@ export function ChatwebSocketProvider({
   children: React.ReactNode;
 }) {
   const friendId = useFriendIdFromRoute();
+  const roomId = useRoomIdData();
   const { WS_URL } = useLayoutData();
   const prevFriendIdRef = useRef<string | null>(null);
+  const prevRoomIdRef = useRef<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const addMessage = useMessagesStore((state) => state.addMessage);
+  const addRoomMessage = useRoomMessagesStore((state) => state.addMessage);
 
   const send = (message: any) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -64,6 +69,12 @@ export function ChatwebSocketProvider({
             payload: { targetPublicId: friendId },
           }),
         );
+        ws.send(
+          JSON.stringify({
+            type: "join_room",
+            roomId,
+          }),
+        );
       };
       ws.onmessage = (event) => {
         try {
@@ -83,6 +94,20 @@ export function ChatwebSocketProvider({
                   sender: data.payload.sender,
                 };
                 addMessage(newMessage);
+              }
+              break;
+            case "NEW_ROOM_MESSAGE":
+              if (data.roomPublicId === roomId) {
+                const payload = data.payload;
+                const newMessage = {
+                  id: payload.id,
+                  content: payload.content,
+                  sender: payload.sender,
+                  is_own: data.userPublicId !== friendId,
+                  is_read: true,
+                  created_at: new Date(),
+                };
+                addRoomMessage(newMessage);
               }
               break;
 
@@ -146,6 +171,7 @@ export function ChatwebSocketProvider({
   useEffect(() => {
     const ws = wsRef.current;
     const prevFriend = prevFriendIdRef.current;
+    const prevRoom = prevRoomIdRef.current;
 
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
@@ -162,15 +188,32 @@ export function ChatwebSocketProvider({
         }),
       );
     }
+    if (prevRoom) {
+      console.log(`↩️ unfocus ${prevRoom}`);
+      ws.send(
+        JSON.stringify({
+          type: "join_room",
+          roomId: null,
+        }),
+      );
+    }
     console.log(`👁️  focus ${friendId}`);
     // 2. focus on active user(receive message, set typing, )
-    if (friendId) {
+    if (friendId || roomId) {
+      // set frind userid focus
       ws.send(
         JSON.stringify({
           type: "chat_focus",
           payload: {
             targetPublicId: friendId,
           },
+        }),
+      );
+      // set room id focus
+      ws.send(
+        JSON.stringify({
+          type: "join_room",
+          roomId: roomId,
         }),
       );
       ws.onmessage = (event) => {
@@ -193,6 +236,21 @@ export function ChatwebSocketProvider({
                 addMessage(newMessage);
               }
               break;
+            case "NEW_ROOM_MESSAGE":
+              if (data.roomPublicId === roomId) {
+                const payload = data.payload;
+                const newMessage = {
+                  id: payload.id,
+                  content: payload.content,
+                  sender: payload.sender,
+                  is_own: data.userPublicId !== friendId,
+                  is_read: true,
+                  created_at: new Date(),
+                };
+                addRoomMessage(newMessage);
+              }
+              break;
+
             case "presence_update":
               console.log("📨 presence_update", data.userPublicId);
               console.log(data);
@@ -213,7 +271,7 @@ export function ChatwebSocketProvider({
     }
 
     prevFriendIdRef.current = friendId;
-  }, [friendId]);
+  }, [friendId, roomId]);
 
   return (
     <WebSocketContext.Provider value={{ send }}>

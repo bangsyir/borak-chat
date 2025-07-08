@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
+import { useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { useChatContext } from "~/components/chat-provider";
 import { ChatWelcome } from "~/components/chat-welcome";
 
