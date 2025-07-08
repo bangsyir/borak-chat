@@ -108,6 +108,7 @@ roomsRoutes.post(
     // create new message
     const result = await roomsService.sendMessage(
       currentUser.sub,
+      currentUser.publicId,
       publicRoomId,
       validated.content,
     );
