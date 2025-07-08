@@ -1,4 +1,3 @@
-import { OK } from "zod";
 import { Prisma } from "../../../generated/prisma";
 import { ResultType } from "../core/shared/response.util";
 import {
@@ -9,6 +8,7 @@ import {
 } from "./rooms.model";
 import { RoomsRepository } from "./rooms.repositry";
 import { UserService } from "../user/user.service";
+import { broadcastToRoom } from "../../infrastructure/ws/websocketManager";
 
 export const RoomsService = (
   repo: RoomsRepository,
@@ -140,10 +140,12 @@ export const RoomsService = (
       const messages = await repo.getRoomMessages(room.id, userId);
 
       (async () => {
-        try {
-          await repo.updateRoomMessageRead(userId, room.id, messages[0].id);
-        } catch (error) {
-          throw new Error("failed to update read status");
+        if (messages.length > 0) {
+          try {
+            await repo.updateRoomMessageRead(userId, room.id, messages[0].id);
+          } catch (error) {
+            throw new Error("failed to update read status");
+          }
         }
       })();
       return {
@@ -161,6 +163,7 @@ export const RoomsService = (
   },
   sendMessage: async (
     userId: number,
+    userPublicId: string,
     publicRoomId: string,
     content: string,
   ): Promise<ResultType<any, any>> => {
@@ -173,6 +176,7 @@ export const RoomsService = (
       };
     }
     const isMember = await repo.isMember(userId, room.id);
+    console.log({ isMember });
     if (!isMember) {
       return {
         ok: false,
@@ -181,7 +185,22 @@ export const RoomsService = (
       };
     }
     try {
-      await repo.sendMessage(userId, room.id, content);
+      const message = await repo.sendMessage(userId, room.id, content);
+      const payload = {
+        id: message?.id,
+        sender: isMember.username,
+        content: message?.content,
+        created_at: message?.created_at,
+        is_read: false,
+        is_own: false,
+      };
+      broadcastToRoom(publicRoomId, {
+        type: "NEW_ROOM_MESSAGE",
+        userPublicId: userPublicId,
+        roomPublicId: publicRoomId,
+        payload: payload,
+      });
+
       return {
         ok: true,
         message: "success send message",
