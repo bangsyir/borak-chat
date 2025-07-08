@@ -62,7 +62,7 @@ export const RoomsRepositoryImpl: RoomsRepository = {
     `;
   },
   isMember: async (userId, roomId) => {
-    return await prisma.roomMember.findFirst({
+    const roomMember = await prisma.roomMember.findFirst({
       where: {
         userId,
         roomId,
@@ -70,8 +70,18 @@ export const RoomsRepositoryImpl: RoomsRepository = {
       select: {
         id: true,
         isAdmin: true,
+        user: {
+          select: {
+            username: true,
+          },
+        },
       },
     });
+    return {
+      id: roomMember?.id,
+      isAdmin: roomMember?.isAdmin,
+      username: roomMember?.user.username,
+    };
   },
   getDetails: async (publicRoomId) => {
     return await prisma.room.findFirst({
@@ -130,22 +140,19 @@ export const RoomsRepositoryImpl: RoomsRepository = {
     return messages;
   },
   sendMessage: async (userId, roomId, content) => {
-    return await prisma.roomMessage.create({
+    const message = await prisma.roomMessage.create({
       data: {
         senderId: userId,
         roomId,
         content,
-        statuses: {
-          create: {
-            roomId,
-            userId,
-          },
-        },
-      },
-      select: {
-        id: true,
       },
     });
+
+    return {
+      id: message.id,
+      content: message.content,
+      created_at: message.createdAt,
+    };
   },
   createInvitation: async (userId: number, roomId: number) => {
     await prisma.room.update({
@@ -168,14 +175,19 @@ export const RoomsRepositoryImpl: RoomsRepository = {
     return;
   },
   updateRoomMessageRead: async (userId, roomId, lastMessageId) => {
-    return await prisma.userRoomStatus.update({
+    return await prisma.userRoomStatus.upsert({
       where: {
         userId_roomId: {
           userId,
           roomId,
         },
       },
-      data: {
+      update: {
+        lastReadMessageId: lastMessageId,
+      },
+      create: {
+        userId,
+        roomId,
         lastReadMessageId: lastMessageId,
       },
     });
