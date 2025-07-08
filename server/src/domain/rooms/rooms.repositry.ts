@@ -29,7 +29,7 @@ export type RoomsRepository = {
     userId: number,
     roomId: number,
     content: string,
-  ) => Promise<{ id: number } | null>;
+  ) => Promise<{ id: number; content: string; created_at: Date } | null>;
   createInvitation: (friendId: number, roomId: number) => Promise<any>;
   updateRoomMessageRead: (
     userId: number,
