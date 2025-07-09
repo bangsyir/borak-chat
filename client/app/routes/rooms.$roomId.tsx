@@ -11,6 +11,7 @@ import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
 import { useFetcher } from "react-router";
 import { useLayoutData } from "~/hooks/use-layout-data";
+import { useMessagesAutoScroll } from "~/hooks/use-scrollable";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { authUser } = await import("~/lib/session.server");
@@ -62,43 +63,9 @@ export default function RoomIdPage({
 }: Route.ComponentProps) {
   const setMessages = useRoomMessagesStore((state) => state.setMessages);
   const messages = useRoomMessagesStore((state) => state.messages);
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
-  const [isInitialLoad, setIsInitialLoad] = React.useState(true);
-
-  // instant scroll to bottom (animation)
-  const scrollToBottomInstant = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({
-        block: "end",
-        inline: "nearest",
-      });
-    }
-  };
-  // smooth scroll to bottom (with animation) - only for new messages
-  const scrollToBottomSmooth = () => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-      inline: "nearest",
-    });
-  };
-  // handle scrolling base on context
-  React.useEffect(() => {
-    if (messages.length > 0) {
-      const timeoutId1 = setTimeout(() => {
-        scrollToBottomInstant();
-      }, 0);
-      const timeoutId2 = setTimeout(() => {
-        scrollToBottomInstant();
-        // setIsInitialLoad(false);
-      }, 100);
-      return () => {
-        clearTimeout(timeoutId1);
-        clearTimeout(timeoutId2);
-      };
-    }
-  }, [messages, isInitialLoad]);
+  const { setIsInitialLoad, scrollToBottomSmooth, messagesEndRef } =
+    useMessagesAutoScroll(messages);
   // handle component mount (page refresh)
   React.useEffect(() => {
     setIsInitialLoad(true);

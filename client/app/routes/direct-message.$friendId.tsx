@@ -15,6 +15,7 @@ import { Textarea } from "~/components/ui/textarea";
 import { useLayoutData } from "~/hooks/use-layout-data";
 import { useMessagesStore } from "~/hooks/use-messages-store";
 import { useOnlineStatusStore } from "~/hooks/use-online-status-store";
+import { useMessagesAutoScroll } from "~/hooks/use-scrollable";
 import { useTypingStore } from "~/hooks/use-typing-store";
 import { DateFormatDistance } from "~/lib/date-format";
 import { cn } from "~/lib/utils";
@@ -83,57 +84,20 @@ export default function DirectMessageFriend() {
   const setMessages = useMessagesStore((state) => state.setMessages);
   const addMessage = useMessagesStore((state) => state.addMessage);
 
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-
   const friendStatus = useOnlineStatusStore((state) =>
     state.getStatus(friendId),
   );
   const isTyping = useTypingStore((state) => state.typingStatus[friendId]);
 
   const layoutData = useLayoutData();
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // instant scroll to bottom (animation)
-  const scrollToBottomInstant = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({
-        block: "end",
-        inline: "nearest",
-      });
-    }
-  };
-  // smooth scroll to bottom (with animation) - only for new messages
-  const scrollToBottomSmooth = () => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-      inline: "nearest",
-    });
-  };
+  const { messagesEndRef, scrollToBottomSmooth, setIsInitialLoad } =
+    useMessagesAutoScroll(messages);
 
   // load messages when activechat change
   useEffect(() => {
     setMessages(data.messages);
     // setIsInitialLoad(true);
   }, [data.messages]);
-
-  // handle scrolling base on context
-  useEffect(() => {
-    if (messages.length > 0) {
-      const timeoutId1 = setTimeout(() => {
-        scrollToBottomInstant();
-      }, 0);
-      const timeoutId2 = setTimeout(() => {
-        scrollToBottomInstant();
-        // setIsInitialLoad(false);
-      }, 100);
-      return () => {
-        clearTimeout(timeoutId1);
-        clearTimeout(timeoutId2);
-      };
-    }
-  }, [messages, isInitialLoad]);
 
   // handle component mount (page refresh)
   useEffect(() => {
