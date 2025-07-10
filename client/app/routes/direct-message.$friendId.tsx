@@ -131,37 +131,35 @@ export default function DirectMessageFriend() {
   };
 
   return (
-    <div className="relative flex flex-col">
-      <div className="relative w-full flex-shrink-0">
-        {/* Chat Header */}
-        <header className="fixed top-0 z-50 flex w-full items-center gap-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <SidebarTrigger />
-          <div className="mx-1 h-8 border-r" />
-          <div className="flex min-w-0 items-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="text-xs">
-                {data.friendName.slice(0, 2)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex items-center gap-1">
-              <h2 className="font-semibold">{data.friendName}</h2>
-              {friendStatus?.isInThisChat ? (
-                <div className="flex h-2 w-2 flex-1 rounded-full bg-green-500"></div>
-              ) : friendStatus?.isOnline ? (
-                <div className="flex h-2 w-2 flex-1 rounded-full bg-yellow-500"></div>
-              ) : (
-                <div className="flex h-2 w-2 flex-1 rounded-full bg-gray-500"></div>
-              )}
-              {isTyping && (
-                <span className="text-sm text-gray-500">is typing...</span>
-              )}
-            </div>
+    <div className="flex h-full flex-col">
+      {/* Chat Header */}
+      <header className="flex w-full items-center gap-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <SidebarTrigger />
+        <div className="mx-1 h-8 border-r" />
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="text-xs">
+              {data.friendName.slice(0, 2)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex items-center gap-1">
+            <h2 className="font-semibold">{data.friendName}</h2>
+            {friendStatus?.isInThisChat ? (
+              <div className="flex h-2 w-2 flex-1 rounded-full bg-green-500"></div>
+            ) : friendStatus?.isOnline ? (
+              <div className="flex h-2 w-2 flex-1 rounded-full bg-yellow-500"></div>
+            ) : (
+              <div className="flex h-2 w-2 flex-1 rounded-full bg-gray-500"></div>
+            )}
+            {isTyping && (
+              <span className="text-sm text-gray-500">is typing...</span>
+            )}
           </div>
-        </header>
-      </div>
+        </div>
+      </header>
       {/* Messages Area */}
-      <div className="relative flex h-full flex-col items-center">
-        <ScrollArea className="flex h-dvh w-full flex-col items-center overflow-x-hidden overflow-y-auto p-3 sm:p-4">
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="flex h-dvh w-full flex-col items-center p-3 sm:p-4">
           <div className="relative flex flex-col items-center space-y-4 p-4">
             {/* Welcome message */}
             <div className="flex flex-col items-center py-8 text-center">
@@ -208,16 +206,14 @@ export default function DirectMessageFriend() {
             </div>
           </div>
         </ScrollArea>
-        {/* Message Input */}
-        <div className="absolute inset-x-0 bottom-0 z-40">
-          <MessageInput
-            friendName={data.friendName}
-            friendId={friendId}
-            onSend={handleSend}
-            onInputFocus={handleInputFocus}
-          />
-        </div>
       </div>
+      {/* Message Input */}
+      <MessageInput
+        friendName={data.friendName}
+        friendId={friendId}
+        onSend={handleSend}
+        onInputFocus={handleInputFocus}
+      />
     </div>
   );
 }
@@ -307,7 +303,7 @@ function MessageInput({
   };
 
   return (
-    <div className="relative mb-3 flex w-full items-center justify-center lg:mb-0">
+    <div className="mb-3 flex w-full items-center justify-center lg:mb-0">
       <div className="w-full rounded-2xl p-3 backdrop-blur supports-[backdrop-filter]:bg-foreground/20 sm:p-4 lg:w-1/2">
         <fetcher.Form onSubmit={handleSubmit}>
           <div className="relative">
