@@ -71,12 +71,7 @@ export const RoomsService = (
   getDetails: async (
     userId: number,
     publicRoomId: string,
-  ): Promise<
-    ResultType<
-      Omit<RoomDetailsResponse, "id"> & { members: MembersListResponse[] },
-      null
-    >
-  > => {
+  ): Promise<ResultType<MembersListResponse[], null>> => {
     try {
       const room = await repo.getDetails(publicRoomId);
       if (!room) {
@@ -98,11 +93,7 @@ export const RoomsService = (
       return {
         ok: true,
         message: "successfull",
-        data: {
-          publicId: room.publicId,
-          name: room.name,
-          members: members,
-        },
+        data: members,
         statusCode: 200,
       };
     } catch (error: any) {
