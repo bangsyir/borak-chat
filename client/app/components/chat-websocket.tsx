@@ -53,7 +53,7 @@ export function ChatwebSocketProvider({
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log("Websocket connected");
+        // console.log("Websocket connected");
         // ws.send(JSON.stringify({ type: "ping" }))
         ws.send(
           JSON.stringify({
@@ -112,8 +112,7 @@ export function ChatwebSocketProvider({
               break;
 
             case "presence_update":
-              console.log("📨 presence_update", data.userPublicId);
-              console.log(data);
+              // console.log("📨 presence_update", data.userPublicId);
               useOnlineStatusStore
                 .getState()
                 .updateStatus(data.userPublicId, data.presence);
@@ -178,7 +177,7 @@ export function ChatwebSocketProvider({
     // skip if friendPublicId is the current user's own ID
     // 1. clear previous focus friendId
     if (prevFriend) {
-      console.log(`↩️ unfocus ${prevFriend}`);
+      // console.log(`↩️ unfocus ${prevFriend}`);
       ws.send(
         JSON.stringify({
           type: "chat_focus",
@@ -189,7 +188,7 @@ export function ChatwebSocketProvider({
       );
     }
     if (prevRoom) {
-      console.log(`↩️ unfocus ${prevRoom}`);
+      // console.log(`↩️ unfocus ${prevRoom}`);
       ws.send(
         JSON.stringify({
           type: "join_room",
@@ -197,7 +196,7 @@ export function ChatwebSocketProvider({
         }),
       );
     }
-    console.log(`👁️  focus ${friendId}`);
+    // console.log(`👁️  focus ${friendId}`);
     // 2. focus on active user(receive message, set typing, )
     if (friendId || roomId) {
       // set frind userid focus
@@ -252,8 +251,7 @@ export function ChatwebSocketProvider({
               break;
 
             case "presence_update":
-              console.log("📨 presence_update", data.userPublicId);
-              console.log(data);
+              // console.log("📨 presence_update", data.userPublicId);
               useOnlineStatusStore
                 .getState()
                 .updateStatus(data.userPublicId, data.presence);
