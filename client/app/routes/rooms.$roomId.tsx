@@ -5,20 +5,28 @@ import React from "react";
 import { useRoomMessagesStore } from "~/hooks/use-room-messages-store";
 import { DateFormatDistance } from "~/lib/date-format";
 import { ScrollArea } from "~/components/ui/scroll-area";
-import { MessageSquare, Send } from "lucide-react";
+import { EllipsisVertical, MessageSquare, Send } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
-import { useFetcher } from "react-router";
+import { Await, useFetcher, useRouteLoaderData } from "react-router";
 import { useLayoutData } from "~/hooks/use-layout-data";
 import { useMessagesAutoScroll } from "~/hooks/use-scrollable";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "~/components/ui/sheet";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { authUser } = await import("~/lib/session.server");
   const { token } = await authUser(request);
   const roomId = params.roomId;
 
-  const respose = await fetch(
+  const resposeMessages = await fetch(
     `${import.meta.env.VITE_API_BASE_URL}/rooms/${roomId}/messages`,
     {
       method: "get",
@@ -28,10 +36,20 @@ export async function loader({ request, params }: Route.LoaderArgs) {
       },
     },
   );
+  const responseRoomMembers = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/rooms/${roomId}`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
 
-  const result = await respose.json();
+  const resultRoomMembers = responseRoomMembers.json();
+  const resultMessages = await resposeMessages.json();
 
-  return { result, roomId };
+  return { resultMessages, resultRoomMembers, roomId };
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -79,31 +97,32 @@ export default function RoomIdPage({
   }, [actionData?.result]);
 
   React.useEffect(() => {
-    setMessages(loaderData.result.data.messages);
-  }, [loaderData.result.data.messages]);
+    setMessages(loaderData.resultMessages.data.messages);
+  }, [loaderData.resultMessages.data.messages]);
 
   return (
-    <div className="relative flex flex-col">
-      <div className="relative w-full flex-shrink-0">
-        <header className="fixed top-0 z-50 flex w-full items-center gap-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="flex h-full flex-col">
+      <header className="flex w-full items-center justify-between gap-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex items-center gap-2">
           <SidebarTrigger />
           <div className="mx-1 h-8 border-r" />
           <div className="flex min-w-0 items-center gap-3">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="text-xs uppercase">
-                {loaderData.result.data.room_name.slice(0, 2)}
+                {loaderData.resultMessages.data.room_name.slice(0, 2)}
               </AvatarFallback>
             </Avatar>
             <div className="flex items-center gap-1">
               <h2 className="font-semibold">
-                {loaderData.result.data.room_name}
+                {loaderData.resultMessages.data.room_name}
               </h2>
             </div>
           </div>
-        </header>
-      </div>
-      <div className="relative flex h-full flex-col items-center">
-        <ScrollArea className="flex h-dvh w-full flex-col items-center overflow-x-hidden overflow-y-auto p-3 sm:p-4">
+        </div>
+        <ListMemberSheet />
+      </header>
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="flex h-dvh w-full flex-col items-center p-3 sm:p-4">
           <div className="relative flex flex-col items-center space-y-4 p-4">
             {/* Welcome message */}
             <div className="flex flex-col items-center py-8 text-center">
@@ -111,7 +130,7 @@ export default function RoomIdPage({
                 <MessageSquare className="h-8 w-8 text-primary" />
               </div>
               <h3 className="mb-2 text-lg">
-                {`Let's start new conversation with ${loaderData.result.data.room_name} group`}
+                {`Let's start new conversation with ${loaderData.resultMessages.data.room_name} group`}
               </h3>
               <p className="text-sm text-muted-foreground">
                 Send a message to start the conversation
@@ -147,17 +166,15 @@ export default function RoomIdPage({
                   </div>
                 </div>
               ))}
-              <div ref={messagesEndRef} className="h-px pb-20" />
+              <div ref={messagesEndRef} className="h-px" />
             </div>
           </div>
         </ScrollArea>
-        <div className="absolute inset-x-0 bottom-0 z-40">
-          <MessageInput
-            roomName={loaderData.result.data.room_name}
-            roomId={loaderData.roomId}
-          />
-        </div>
       </div>
+      <MessageInput
+        roomName={loaderData.resultMessages.data.room_name}
+        roomId={loaderData.roomId}
+      />
     </div>
   );
 }
@@ -219,7 +236,7 @@ function MessageInput({
   };
 
   return (
-    <div className="relative mb-3 flex w-full items-center justify-center lg:mb-0">
+    <div className="mb-3 flex w-full items-center justify-center lg:mb-0">
       <div className="w-full rounded-2xl p-3 backdrop-blur supports-[backdrop-filter]:bg-foreground/20 sm:p-4 lg:w-1/2">
         <fetcher.Form onSubmit={handleSubmit}>
           <div className="relative">
@@ -248,5 +265,45 @@ function MessageInput({
         </fetcher.Form>
       </div>
     </div>
+  );
+}
+
+function ListMemberSheet() {
+  const { resultRoomMembers } = useRouteLoaderData("routes/rooms.$roomId");
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="outline" size="icon">
+          <EllipsisVertical />
+        </Button>
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Member List</SheetTitle>
+          <SheetDescription></SheetDescription>
+        </SheetHeader>
+        <div className="flex flex-col gap-2 px-4">
+          <React.Suspense fallback="Loading...">
+            <Await resolve={resultRoomMembers}>
+              {(initialize) => (
+                <>
+                  {initialize.data.map((item: any) => (
+                    <div key={item.id} className="flex items-center gap-2">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full border bg-muted">
+                        {item.username.slice(0, 2)}
+                      </div>
+                      <p>{item.username}</p>
+                      <small className="rounded-full bg-green-700 px-1">
+                        {item.isAdmin && "admin"}
+                      </small>
+                    </div>
+                  ))}
+                </>
+              )}
+            </Await>
+          </React.Suspense>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
