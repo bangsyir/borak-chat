@@ -238,7 +238,6 @@ export const handleRoomJoin = (
   ws: ServerWebSocket<WebSocketData>,
   data: any,
 ) => {
-  console.log(rooms);
   const { userPublicId, roomId } = data;
 
   if (!userPublicId || !roomId) {
