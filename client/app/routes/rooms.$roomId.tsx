@@ -102,7 +102,7 @@ export default function RoomIdPage({
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex w-full items-center justify-between gap-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="flex w-full items-center justify-between gap-2 border-b p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center gap-2">
           <SidebarTrigger />
           <div className="mx-1 h-8 border-r border-border" />
@@ -287,8 +287,8 @@ function ListMemberSheet() {
             <Await resolve={resultRoomMembers}>
               {(initialize) => (
                 <>
-                  {initialize.data.map((item: any) => (
-                    <div key={item.id} className="flex items-center gap-2">
+                  {initialize.data.map((item: any, index: any) => (
+                    <div key={index} className="flex items-center gap-2">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full border-border bg-muted">
                         {item.username.slice(0, 2)}
                       </div>
