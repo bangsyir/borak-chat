@@ -52,7 +52,16 @@ export function RequestFriendDialog() {
           <Separator className="my-2 w-full" />
           <div className="grid gap-4">
             <div className="grid gap-3">
-              <Label htmlFor="FriendPublicId">User Id</Label>
+              <Label
+                htmlFor="FriendPublicId"
+                aria-invalid={
+                  fetcher.state !== "submitting" &&
+                  fetcher?.data?.success === false
+                }
+                className="aria-invalid:text-destructive"
+              >
+                User Id
+              </Label>
               <div className="flex flex-col gap-1">
                 <Input
                   ref={inputRef}
@@ -60,10 +69,15 @@ export function RequestFriendDialog() {
                   name="friendPublicId"
                   placeholder="Friend ID"
                   autoComplete="off"
+                  aria-invalid={
+                    fetcher.state !== "submitting" &&
+                    fetcher?.data?.success === false
+                  }
+                  autoFocus
                   required
                 />
-                {!fetcher?.data?.success && (
-                  <small className="text-red-500">
+                {fetcher.state !== "submitting" && !fetcher?.data?.success && (
+                  <small className="text-destructive">
                     {fetcher.data?.errors.friendPublicId}
                   </small>
                 )}
@@ -90,7 +104,7 @@ export function RequestFriendDialog() {
                   Submitting
                 </>
               ) : (
-                "Save changes"
+                "Send"
               )}
             </Button>
           </DialogFooter>
