@@ -5,7 +5,7 @@ import React from "react";
 import { useRoomMessagesStore } from "~/hooks/use-room-messages-store";
 import { DateFormatDistance } from "~/lib/date-format";
 import { ScrollArea } from "~/components/ui/scroll-area";
-import { EllipsisVertical, MessageSquare, Send } from "lucide-react";
+import { ArrowUp, EllipsisVertical, MessageSquare } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
@@ -105,7 +105,7 @@ export default function RoomIdPage({
       <header className="flex w-full items-center justify-between gap-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center gap-2">
           <SidebarTrigger />
-          <div className="mx-1 h-8 border-r" />
+          <div className="mx-1 h-8 border-r border-border" />
           <div className="flex min-w-0 items-center gap-3">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="text-xs uppercase">
@@ -123,7 +123,7 @@ export default function RoomIdPage({
       </header>
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="flex h-dvh w-full flex-col items-center p-3 sm:p-4">
-          <div className="relative flex flex-col items-center space-y-4 p-4">
+          <div className="relative flex flex-col items-center space-y-4 p-4 pt-24">
             {/* Welcome message */}
             <div className="flex flex-col items-center py-8 text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
@@ -258,7 +258,7 @@ function MessageInput({
                 type="submit"
                 disabled={fetcher.state === "submitting"}
               >
-                <Send className="h-4 w-4" />
+                <ArrowUp className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -289,7 +289,7 @@ function ListMemberSheet() {
                 <>
                   {initialize.data.map((item: any) => (
                     <div key={item.id} className="flex items-center gap-2">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full border bg-muted">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full border-border bg-muted">
                         {item.username.slice(0, 2)}
                       </div>
                       <p>{item.username}</p>

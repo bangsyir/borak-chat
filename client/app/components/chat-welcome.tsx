@@ -13,7 +13,7 @@ export function ChatWelcome() {
         <div className="flex flex-shrink-0 items-center justify-between border-b border-border p-3">
           <div className="relative flex items-center gap-3">
             <SidebarTrigger />
-            <div className="mx-1 h-8 border-r" />
+            <div className="mx-1 h-8 border-r border-border" />
             <h2 className="font-semibold">ChatApp</h2>
           </div>
         </div>

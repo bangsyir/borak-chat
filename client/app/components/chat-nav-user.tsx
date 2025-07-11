@@ -69,7 +69,9 @@ export function NavUser() {
           <DialogTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className={cn(`border hover:bg-accent/50 hover:text-foreground`)}
+              className={cn(
+                `border border-border hover:bg-accent/50 hover:text-foreground`,
+              )}
             >
               <div className="flex items-center gap-2 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">

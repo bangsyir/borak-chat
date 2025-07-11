@@ -67,8 +67,8 @@ export function AppSidebar() {
             className={cn(
               "flex flex-1 items-center justify-center gap-2 p-3 text-sm font-medium transition-colors",
               location.pathname.includes("/direct-message")
-                ? "border-b-2 bg-primary text-accent-foreground"
-                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                ? "border-b-2 bg-primary"
+                : "hover:bg-accent/50 hover:text-foreground",
             )}
           >
             <MessageSquare className="h-4 w-4" />
@@ -78,8 +78,8 @@ export function AppSidebar() {
             className={cn(
               "flex flex-1 items-center justify-center gap-2 p-3 text-sm font-medium transition-colors",
               location.pathname.includes("/rooms")
-                ? "border-b-2 bg-primary text-accent-foreground"
-                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                ? "border-b-2 bg-primary"
+                : "hover:bg-accent/50 hover:text-foreground",
             )}
           >
             <Users className="h-4 w-4" />
@@ -89,8 +89,8 @@ export function AppSidebar() {
             className={cn(
               "flex flex-1 items-center justify-center gap-2 p-3 text-sm font-medium transition-colors",
               location.pathname.includes("/request")
-                ? "border-b-2 bg-primary text-accent-foreground"
-                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                ? "border-b-2 bg-primary"
+                : "hover:bg-accent/50 hover:text-foreground",
             )}
           >
             <UserPlus className="h-4 w-4" />

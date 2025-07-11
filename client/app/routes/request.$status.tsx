@@ -122,7 +122,7 @@ function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex items-center justify-between border-b border-border p-3">
           <div className="relative flex items-center gap-3">
             <SidebarTrigger />
-            <div className="mx-1 h-8 border-r" />
+            <div className="mx-1 h-8 border-r border-border" />
             <h2 className="font-semibold">Request</h2>
           </div>
         </div>

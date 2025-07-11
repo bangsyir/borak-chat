@@ -1,4 +1,4 @@
-import { MessageSquare, Send } from "lucide-react";
+import { ArrowUp, MessageSquare } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import {
   useFetcher,
@@ -133,9 +133,9 @@ export default function DirectMessageFriend() {
   return (
     <div className="flex h-full flex-col">
       {/* Chat Header */}
-      <header className="flex w-full items-center gap-2 border-b bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="flex w-full items-center gap-2 border-b border-border bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <SidebarTrigger />
-        <div className="mx-1 h-8 border-r" />
+        <div className="mx-1 h-8 border-r border-border" />
         <div className="flex min-w-0 items-center gap-3">
           <Avatar className="h-8 w-8">
             <AvatarFallback className="text-xs">
@@ -158,9 +158,9 @@ export default function DirectMessageFriend() {
         </div>
       </header>
       {/* Messages Area */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-y-hidden">
         <ScrollArea className="flex h-dvh w-full flex-col items-center p-3 sm:p-4">
-          <div className="relative flex flex-col items-center space-y-4 p-4">
+          <div className="relative flex flex-col items-center space-y-4 p-4 pt-24">
             {/* Welcome message */}
             <div className="flex flex-col items-center py-8 text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
@@ -202,7 +202,7 @@ export default function DirectMessageFriend() {
                   </div>
                 </div>
               ))}
-              <div ref={messagesEndRef} className="h-px pb-18" />
+              <div ref={messagesEndRef} className="h-px" />
             </div>
           </div>
         </ScrollArea>
@@ -327,7 +327,7 @@ function MessageInput({
                 type="submit"
                 disabled={fetcher.state === "submitting"}
               >
-                <Send className="h-4 w-4" />
+                <ArrowUp className="h-4 w-4" />
               </Button>
             </div>
           </div>
