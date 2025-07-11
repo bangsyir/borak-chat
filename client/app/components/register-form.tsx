@@ -42,7 +42,7 @@ export function RegisterForm({
       <Card>
         <CardHeader>
           <CardTitle>
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <span>Please create an account</span>
               <ModeToggle />
             </div>
@@ -53,17 +53,30 @@ export function RegisterForm({
           <fetcher.Form method="post">
             <div className="flex flex-col gap-6">
               <div className="grid gap-3">
-                <Label htmlFor="username">Username</Label>
+                <Label
+                  htmlFor="username"
+                  className="aria-invalid:text-destructive"
+                  aria-invalid={
+                    fetcher.state !== "submitting" &&
+                    fetcher?.data?.errors?.username !== undefined
+                  }
+                >
+                  Username
+                </Label>
                 <div className="flex flex-col">
                   <Input
                     id="username"
                     name="username"
                     type="text"
+                    aria-invalid={
+                      fetcher.state !== "submitting" &&
+                      fetcher?.data?.errors?.username !== undefined
+                    }
                     placeholder="username"
                     required
                   />
                   {fetcher?.data?.errors?.username && (
-                    <small className="text-red-500 pl-1">
+                    <small className="pl-1 text-destructive">
                       {fetcher?.data?.errors?.username}
                     </small>
                   )}
@@ -71,7 +84,16 @@ export function RegisterForm({
               </div>
               <div className="grid gap-3">
                 <div className="flex items-center">
-                  <Label htmlFor="email">Email</Label>
+                  <Label
+                    htmlFor="email"
+                    className="aria-invalid:text-destructive"
+                    aria-invalid={
+                      fetcher.state !== "submitting" &&
+                      fetcher?.data?.errors?.email !== undefined
+                    }
+                  >
+                    Email
+                  </Label>
                   <small className="text-gray-400">&nbsp;(Optional)</small>
                 </div>
                 <div className="flex flex-col">
@@ -80,25 +102,42 @@ export function RegisterForm({
                     name="email"
                     type="email"
                     placeholder="email"
+                    aria-invalid={
+                      fetcher.state !== "submitting" &&
+                      fetcher?.data?.errors?.email !== undefined
+                    }
                   />
                   {fetcher?.data?.errors?.email && (
-                    <small className="text-red-500 pl-1">
+                    <small className="pl-1 text-destructive">
                       {fetcher?.data?.errors?.email}
                     </small>
                   )}
                 </div>
               </div>
               <div className="grid gap-3">
-                <Label htmlFor="password">Password</Label>
+                <Label
+                  htmlFor="password"
+                  className="aria-invalid:text-destructive"
+                  aria-invalid={
+                    fetcher.state !== "submitting" &&
+                    fetcher?.data?.errors?.password !== undefined
+                  }
+                >
+                  Password
+                </Label>
                 <div className="flex flex-col">
                   <Input
                     id="password"
                     name="password"
                     type="password"
+                    aria-invalid={
+                      fetcher.state !== "submitting" &&
+                      fetcher?.data?.errors?.password !== undefined
+                    }
                     required
                   />
                   {fetcher?.data?.errors?.password && (
-                    <small className="text-red-500 pl-1">
+                    <small className="pl-1 text-destructive">
                       {fetcher?.data?.errors?.password}
                     </small>
                   )}
