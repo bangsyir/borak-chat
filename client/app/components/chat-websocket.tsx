@@ -53,7 +53,7 @@ export function ChatwebSocketProvider({
       wsRef.current = ws;
 
       ws.onopen = () => {
-        // console.log("Websocket connected");
+        console.log("Websocket connected");
         // ws.send(JSON.stringify({ type: "ping" }))
         ws.send(
           JSON.stringify({
