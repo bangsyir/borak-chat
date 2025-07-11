@@ -14,7 +14,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     },
   });
   const result: AuthResponseType = await response.json();
-  const WS_URL = `ws://192.168.0.12:3000/ws?token=${token}`;
   if (result.success === false) {
     return data(
       {},
@@ -25,6 +24,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
       },
     );
   }
+  const url = new URL(request.url);
+  const wsProtocol = url.protocol === "http:" ? "ws" : "wss";
+  const WS_URL = `${wsProtocol}://192.168.0.12:3000/ws?token=${token}`;
   return { user: result, WS_URL };
 }
 
