@@ -170,14 +170,13 @@
 }
 @layer base {
   * {
-    border-color: var(--border);
+    border-color: var(--color-border);
     outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
   }
-}
-
-body {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
-  -webkit-font-smoothing: antialiased;
-  letter-spacing: var(--tracking-normal);
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: var(--tracking-normal);
+  }
 }
