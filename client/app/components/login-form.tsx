@@ -45,7 +45,7 @@ export function LoginForm({
       <Card>
         <CardHeader>
           <CardTitle>
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <span>Welcome back</span>
               <ModeToggle />
             </div>
@@ -53,12 +53,8 @@ export function LoginForm({
           <CardDescription>login to your borak account</CardDescription>
         </CardHeader>
         <CardContent>
-          {fetcher?.data?.success === false && (
-            <Alert
-              variant={"destructive"}
-              className="mb-6"
-              hidden={fetcher?.data?.success === true}
-            >
+          {fetcher.data && !fetcher?.data?.success && (
+            <Alert variant={"destructive"} className="mb-6">
               <AlertCircle />
               <AlertTitle>Unable to process the login</AlertTitle>
               <AlertDescription>{fetcher?.data?.message}</AlertDescription>
@@ -67,25 +63,39 @@ export function LoginForm({
           <fetcher.Form method="post">
             <div className="flex flex-col gap-4">
               <div className="grid gap-3">
-                <Label htmlFor="username">Username</Label>
+                <Label
+                  htmlFor="username"
+                  className="aria-invalid:text-destructive"
+                  aria-invalid={fetcher.data && !fetcher.data.success}
+                >
+                  Username
+                </Label>
                 <div className="flex flex-col">
                   <Input
                     id="username"
                     name="username"
                     type="text"
                     placeholder="username"
+                    aria-invalid={fetcher.data && !fetcher?.data?.success}
                     required
                   />
-                  <small className="text-red-500 pl-1">
-                    {fetcher?.data?.success === false
-                      ? fetcher?.data?.errors?.username
-                      : ""}
-                  </small>
+                  {fetcher.state !== "submitting" &&
+                    fetcher?.data?.success === false && (
+                      <small className="pl-1 text-destructive">
+                        {fetcher?.data?.errors?.username}
+                      </small>
+                    )}
                 </div>
               </div>
               <div className="grid gap-3">
-                <div className="flex item-center">
-                  <Label htmlFor="password">Password</Label>
+                <div className="item-center flex">
+                  <Label
+                    htmlFor="password"
+                    className="aria-invalid:text-destructive"
+                    aria-invalid={fetcher.data && !fetcher.data.success}
+                  >
+                    Password
+                  </Label>
                   <Link
                     to={""}
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
@@ -99,23 +109,24 @@ export function LoginForm({
                     name="password"
                     type="password"
                     placeholder="password"
+                    aria-invalid={fetcher.data && !fetcher?.data?.success}
                     required
                   />
-                  <small className="text-red-500 pl-1">
-                    {" "}
-                    {fetcher?.data?.success === false
-                      ? fetcher?.data?.errors?.password
-                      : ""}
-                  </small>
+                  {fetcher.state !== "submitting" &&
+                    !fetcher?.data?.success && (
+                      <small className="pl-1 text-destructive">
+                        {fetcher?.data?.errors?.password}
+                      </small>
+                    )}
                 </div>
               </div>
               <div className="flex flex-col gap-3">
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={fetcher.state !== "idle"}
+                  disabled={fetcher.state === "submitting"}
                 >
-                  {fetcher.state !== "idle" ? (
+                  {fetcher.state === "submitting" ? (
                     <>
                       <Loader2Icon className="animate-spin" /> Please wait
                     </>
