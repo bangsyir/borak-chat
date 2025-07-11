@@ -1,11 +1,6 @@
 import { ArrowUp, MessageSquare } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  useFetcher,
-  useLoaderData,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
-} from "react-router";
+import { useFetcher } from "react-router";
 import { useWebSocketContext } from "~/components/chat-websocket";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
@@ -19,6 +14,7 @@ import { useMessagesAutoScroll } from "~/hooks/use-scrollable";
 import { useTypingStore } from "~/hooks/use-typing-store";
 import { DateFormatDistance } from "~/lib/date-format";
 import { cn } from "~/lib/utils";
+import type { Route } from "./+types/direct-message.$friendId";
 
 export type DirectMessageResponse = {
   id: number;
@@ -29,7 +25,7 @@ export type DirectMessageResponse = {
   sender: string;
 };
 
-export async function loader({ request, params }: LoaderFunctionArgs) {
+export async function loader({ request, params }: Route.LoaderArgs) {
   const { authUser } = await import("~/lib/session.server");
   const { token } = await authUser(request);
   const friendId = params.friendId;
@@ -53,7 +49,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   };
 }
 
-export async function action({ request, params }: ActionFunctionArgs) {
+export async function action({ request, params }: Route.ActionArgs) {
   const { authUser } = await import("~/lib/session.server");
   const { token } = await authUser(request);
 
@@ -77,19 +73,20 @@ export async function action({ request, params }: ActionFunctionArgs) {
   return result;
 }
 
-export default function DirectMessageFriend() {
-  const { data, friendId } = useLoaderData();
+export default function DirectMessageFriend({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
+  const { data, friendId } = loaderData;
 
   const messages = useMessagesStore((state) => state.messages);
   const setMessages = useMessagesStore((state) => state.setMessages);
-  const addMessage = useMessagesStore((state) => state.addMessage);
 
   const friendStatus = useOnlineStatusStore((state) =>
     state.getStatus(friendId),
   );
   const isTyping = useTypingStore((state) => state.typingStatus[friendId]);
 
-  const layoutData = useLayoutData();
   const { messagesEndRef, scrollToBottomSmooth, setIsInitialLoad } =
     useMessagesAutoScroll(messages);
 
@@ -100,38 +97,19 @@ export default function DirectMessageFriend() {
   }, [data.messages]);
 
   // handle component mount (page refresh)
-  useEffect(() => {
+  React.useEffect(() => {
     setIsInitialLoad(true);
   }, []);
 
-  const handleSend = (content: string) => {
-    const tempId = Date.now();
-    const optomisticMessage = {
-      id: tempId,
-      content,
-      isRead: false,
-      isOwn: true,
-      createdAt: new Date(),
-      sender: layoutData.user.data.username,
-    };
-
-    // add immediatlety to UI
-    addMessage(optomisticMessage);
-
-    setTimeout(() => {
+  React.useEffect(() => {
+    const scroll = setTimeout(() => {
       scrollToBottomSmooth();
     }, 50);
-  };
-
-  const handleInputFocus = () => {
-    // Scroll to bottom when input is focused (mobile keyboard appears)
-    setTimeout(() => {
-      scrollToBottomSmooth();
-    }, 300);
-  };
+    return clearTimeout(scroll);
+  }, [actionData?.result]);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-dvh flex-col">
       {/* Chat Header */}
       <header className="flex w-full items-center gap-2 border-b border-border bg-background/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <SidebarTrigger />
@@ -208,12 +186,7 @@ export default function DirectMessageFriend() {
         </ScrollArea>
       </div>
       {/* Message Input */}
-      <MessageInput
-        friendName={data.friendName}
-        friendId={friendId}
-        onSend={handleSend}
-        onInputFocus={handleInputFocus}
-      />
+      <MessageInput friendName={data.friendName} friendId={friendId} />
     </div>
   );
 }
@@ -221,20 +194,18 @@ export default function DirectMessageFriend() {
 function MessageInput({
   friendName,
   friendId,
-  onSend,
-  onInputFocus,
 }: {
   friendName: string;
   friendId: string;
-  onSend: (value: string) => void;
-  onInputFocus: () => void;
 }) {
   const [message, setMessage] = useState("");
   const fetcher = useFetcher();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeout = useRef<NodeJS.Timeout | null>(null);
   const typingRef = useRef<boolean>(false);
+  const layoutData = useLayoutData();
   const { send } = useWebSocketContext();
+  const addMessage = useMessagesStore((state) => state.addMessage);
 
   useEffect(() => {
     if (fetcher.state === "idle" && fetcher.data && fetcher.data.success) {
@@ -257,7 +228,8 @@ function MessageInput({
         payload: { targetPublicId: friendId },
       });
     }
-    if (value.length === 0) {
+    if (value.length < 1) {
+      typingRef.current = false;
       send({
         type: "typing_stop",
         payload: { targetPublicId: friendId },
@@ -282,7 +254,17 @@ function MessageInput({
       { content: message },
       { method: "post", action: `/direct-message/${friendId}` },
     );
-    onSend(message);
+    const tempId = Date.now();
+    const optomisticMessage = {
+      id: tempId,
+      content: message,
+      isRead: false,
+      isOwn: true,
+      createdAt: new Date(),
+      sender: layoutData.user.data.username,
+    };
+    addMessage(optomisticMessage);
+
     // clear typing status
     send({
       type: "typing_stop",
@@ -314,7 +296,6 @@ function MessageInput({
               placeholder={`Message ${friendName}...`}
               value={message}
               onChange={handleInputChange}
-              onFocus={onInputFocus}
               className={cn("pr-20")}
               autoComplete="off"
               onKeyDown={handleKeyDown}
