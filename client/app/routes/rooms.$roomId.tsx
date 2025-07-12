@@ -101,8 +101,8 @@ export default function RoomIdPage({
   }, [loaderData.resultMessages.data.messages]);
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="flex w-full items-center justify-between gap-2 border-b p-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="flex h-dvh flex-col">
+      <header className="flex w-full flex-shrink-0 items-center justify-between gap-2 border-b p-3">
         <div className="flex items-center gap-2">
           <SidebarTrigger />
           <div className="mx-1 h-8 border-r border-border" />
@@ -171,6 +171,7 @@ export default function RoomIdPage({
           </div>
         </ScrollArea>
       </div>
+
       <MessageInput
         roomName={loaderData.resultMessages.data.room_name}
         roomId={loaderData.roomId}
@@ -237,7 +238,7 @@ function MessageInput({
 
   return (
     <div className="mb-3 flex w-full items-center justify-center lg:mb-0">
-      <div className="w-full rounded-2xl p-3 backdrop-blur supports-[backdrop-filter]:bg-foreground/20 sm:p-4 lg:w-1/2">
+      <div className="w-full rounded-2xl border p-3 sm:p-4 lg:w-1/2">
         <fetcher.Form onSubmit={handleSubmit}>
           <div className="relative">
             <Textarea

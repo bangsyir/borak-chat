@@ -24,7 +24,6 @@ import {
   SidebarMenuSkeleton,
 } from "~/components/ui/sidebar";
 import { Input } from "~/components/ui/input";
-import { Button } from "~/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { cn } from "~/lib/utils";
 import { NavLink, useLocation } from "react-router";
@@ -34,6 +33,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { useChatContext } from "./chat-provider";
 import { SettingsDialog } from "./app-setting-dialog";
 import { RequestFriendDialog } from "./app-request-friend-dialog";
+import { CreateRoomDialog } from "./create-room";
 
 export function AppSidebar() {
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -169,9 +169,10 @@ export function AppSidebar() {
             <SidebarGroup>
               <SidebarGroupLabel className="flex items-center justify-between px-4 py-2">
                 <span>Rooms ({filteredRooms.length})</span>
-                <Button variant="ghost" size="icon" className="h-6 w-6">
-                  <Plus className="h-3 w-3" />
-                </Button>
+                {/* <Button variant="ghost" size="icon" className="h-6 w-6"> */}
+                {/*   <Plus className="h-3 w-3" /> */}
+                {/* </Button> */}
+                <CreateRoomDialog />
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
