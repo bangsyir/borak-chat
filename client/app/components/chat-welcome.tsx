@@ -19,8 +19,8 @@ export function ChatWelcome() {
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="max-w-md space-y-4 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <MessageSquare className="h-8 w-8 text-primary" />
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary">
+              <MessageSquare className="h-8 w-8 text-foreground" />
             </div>
             <div className="space-y-2">
               <h3 className="text-xl font-semibold">Welcome to ChatApp</h3>
