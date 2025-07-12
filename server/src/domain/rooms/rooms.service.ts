@@ -20,10 +20,18 @@ export const RoomsService = (
     isPrivate: boolean,
   ): Promise<ResultType<any, any>> => {
     try {
-      await repo.createRoom(creatorId, name, isPrivate);
+      const room = await repo.createRoom(creatorId, name, isPrivate);
       return {
         ok: true,
         message: "Room is successfull created",
+        data: {
+          publicId: room.publicId,
+          name: room.name,
+          lastMessage: null,
+          lastMessageCreated: null,
+          totalMember: "1",
+          isPrivate: room.isPrivate,
+        },
         statusCode: 201,
       };
     } catch (error: any) {

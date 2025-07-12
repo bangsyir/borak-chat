@@ -44,7 +44,10 @@ roomsRoutes.post("/rooms", createRoomsValidation, async (c) => {
   if (!result.ok) {
     return c.json(createErrorResponse(result.message), result.statusCode);
   }
-  return c.json(createSuccessResponse(result.message), result.statusCode);
+  return c.json(
+    createSuccessResponse(result.message, result.data),
+    result.statusCode,
+  );
 });
 
 roomsRoutes.get("/rooms", async (c) => {

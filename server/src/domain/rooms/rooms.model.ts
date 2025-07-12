@@ -1,4 +1,5 @@
 export type CreateRoomsResponse = {
+  publicId: string;
   creatorId: number;
   name: string;
   isPrivate: boolean;

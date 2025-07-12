@@ -22,6 +22,7 @@ export const RoomsRepositoryImpl: RoomsRepository = {
         },
       },
       select: {
+        publicId: true,
         creatorId: true,
         name: true,
         isPrivate: true,
