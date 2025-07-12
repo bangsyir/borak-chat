@@ -52,6 +52,7 @@ export function SettingsDialog() {
               <Switch
                 checked={theme === "dark" ? true : false}
                 onClick={handleThemeToggle}
+                className="border-border"
               />
             </div>
           </div>
