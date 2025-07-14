@@ -3,7 +3,7 @@ import { MessagesRespository } from "../../domain/messages/messages.repository";
 import { prisma } from "../db/db";
 
 export const MessagesRepositoryImpl: MessagesRespository = {
-  getMessages: async (currentUserId, friendId) => {
+  getMessages: async (currentUserId, friendId, pageLimit, offset) => {
     const messages = await prisma.$queryRaw<GetDirectMessageResponse[]>`
       SELECT
         dm.id,
@@ -23,9 +23,20 @@ export const MessagesRepositoryImpl: MessagesRespository = {
         OR
         (dm.sender_id = ${friendId} AND dm.receiver_id = ${currentUserId})
       ORDER BY
-        dm.created_at ASC;
+        dm.created_at DESC
+      LIMIT ${pageLimit} OFFSET ${offset};
     `;
     return messages;
+  },
+  countMessage: async (currentUserId, friendId) => {
+    return await prisma.directMessage.count({
+      where: {
+        OR: [
+          { senderId: currentUserId, receiverId: friendId },
+          { senderId: friendId, receiverId: currentUserId },
+        ],
+      },
+    });
   },
   sendMessage: async (senderId, receiverId, content) => {
     const message = await prisma.directMessage.create({

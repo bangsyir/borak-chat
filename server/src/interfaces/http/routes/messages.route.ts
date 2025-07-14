@@ -28,17 +28,35 @@ const messagesRoutes = new Hono<{ Variables: Variables }>();
 
 messagesRoutes.use(authMiddleware);
 
+function isNumber(value: string) {
+  return !isNaN(parseFloat(value));
+}
+
 messagesRoutes.get(
   "/messages/direct/:friendId",
   friendValidation,
   async (c) => {
     // get current auth user
     const currentUser = c.get("user");
+
     // search with query params
     const friendId = c.req.param("friendId");
 
+    // # HANDLE PAGINATION
+    //* get page
+    const currentPage = c.req.query("page") || "1";
+    if (!isNumber(currentPage)) {
+      return c.json(
+        createErrorResponse("Number only, current page type is not allowed."),
+        400,
+      );
+    }
     // return message
-    const messages = await messagesService.getAll(currentUser.sub, friendId);
+    const messages = await messagesService.getAll(
+      currentUser.sub,
+      friendId,
+      parseFloat(currentPage),
+    );
     if (messages.ok === false) {
       return c.json(createErrorResponse(messages.message), messages.statusCode);
     }

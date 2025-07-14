@@ -11,7 +11,11 @@ export const MessagesService = (
   getAll: async (
     currentUserId: number,
     friendId: string,
+    currentPage: number,
   ): Promise<ResultType<any, any>> => {
+    const PAGE_LIMIT = 20;
+    const OFFSET = (currentPage - 1) * PAGE_LIMIT;
+
     try {
       const friend = await userService.findByPublicId(friendId);
       if (!friend) {
@@ -29,7 +33,18 @@ export const MessagesService = (
           statusCode: 400,
         };
       }
-      const result = await messagesRepo.getMessages(currentUserId, friend.id);
+      const countMessages = await messagesRepo.countMessage(
+        currentUserId,
+        friend.id,
+      );
+      const totalPage = Math.ceil(countMessages / PAGE_LIMIT);
+      const hasMore = totalPage === currentPage ? false : true;
+      const result = await messagesRepo.getMessages(
+        currentUserId,
+        friend.id,
+        PAGE_LIMIT,
+        OFFSET,
+      );
       const messages = result.map((item) => ({
         id: item.id,
         content: item.content,
@@ -40,6 +55,9 @@ export const MessagesService = (
       }));
       const data = {
         friendName: friend.username,
+        currentPage,
+        totalPage,
+        hasMore,
         messages,
       };
       return {
