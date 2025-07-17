@@ -13,6 +13,7 @@ interface MessagesType {
   messages: Message[];
   setMessages: (value: Message[]) => void;
   addMessage: (value: Message) => void;
+  prependMessages: (messages: Message[]) => void;
   clearAll: () => void;
 }
 
@@ -34,6 +35,11 @@ export const useMessagesStore = create<MessagesType>((set) => ({
         messages: [...state.messages, newMessage],
       };
     });
+  },
+  prependMessages: (newMessages) => {
+    set((state) => ({
+      messages: [...new Set([...newMessages, ...state.messages])],
+    }));
   },
   clearAll: () => set({ messages: [] }),
 }));
