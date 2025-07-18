@@ -1,5 +1,5 @@
 import { ArrowUp, MessageSquare } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import { useFetcher } from "react-router";
 import { useWebSocketContext } from "~/components/chat-websocket";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
@@ -15,8 +15,9 @@ import { useTypingStore } from "~/hooks/use-typing-store";
 import { DateFormatDistance } from "~/lib/date-format";
 import { cn } from "~/lib/utils";
 import type { Route } from "./+types/direct-message.$friendId";
+import { useShallow } from "zustand/react/shallow";
 
-export type DirectMessageResponse = {
+export type DirectMessage = {
   id: number;
   content: string;
   isRead: boolean;
@@ -25,13 +26,27 @@ export type DirectMessageResponse = {
   sender: string;
 };
 
+export type DirectMessageResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    friendName: string;
+    currentPage: number;
+    totalPages: number;
+    hasMore: boolean;
+    messages: DirectMessage[];
+  };
+};
+
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { authUser } = await import("~/lib/session.server");
   const { token } = await authUser(request);
   const friendId = params.friendId;
+  const url = new URL(request.url);
+  const page = url.searchParams.get("page") || "1";
 
   const response = await fetch(
-    `${import.meta.env.VITE_API_BASE_URL}/messages/direct/${friendId}`,
+    `${import.meta.env.VITE_API_BASE_URL}/messages/direct/${friendId}?page=${page}`,
     {
       method: "GET",
       headers: {
@@ -40,12 +55,11 @@ export async function loader({ request, params }: Route.LoaderArgs) {
       },
     },
   );
-  const WS_URL = `ws://192.168.0.12:3000/ws?token=${token}`;
-  const result = await response.json();
+  const result: DirectMessageResponse = await response.json();
+
   return {
     ...result,
     friendId: friendId,
-    ENV: { WS_URL },
   };
 }
 
@@ -79,34 +93,148 @@ export default function DirectMessageFriend({
 }: Route.ComponentProps) {
   const { data, friendId } = loaderData;
 
+  // initiate hooks
   const messages = useMessagesStore((state) => state.messages);
   const setMessages = useMessagesStore((state) => state.setMessages);
-
+  const prependMessages = useMessagesStore((state) => state.prependMessages);
   const friendStatus = useOnlineStatusStore((state) =>
     state.getStatus(friendId),
   );
+  const clearMessages = useMessagesStore((state) => state.clearAll);
   const isTyping = useTypingStore((state) => state.typingStatus[friendId]);
 
-  const { messagesEndRef, scrollToBottomSmooth, setIsInitialLoad } =
-    useMessagesAutoScroll(messages);
+  const {
+    messagesEndRef,
+    scrollContainerRef,
+    saveScrollPosition,
+    restoreScrollPosition,
+    scrollToBottomInstant,
+    scrollToBottomSmooth,
+  } = useMessagesAutoScroll();
+
+  //track previous message length for sroll detection
+  const prevMessagesLenghtRef = React.useRef(messages.length);
+
+  // Infinite scroll state
+  const [currentPage, setCurrentPage] = React.useState(data.currentPage);
+  const [hasMore, setHasMore] = React.useState(data.hasMore || false);
+  const prevScrollPositionRef = React.useRef<{
+    scrollTop: number;
+    scrollHeight: number;
+  } | null>(null);
+
+  // track if user is near bottm to decide if we should auto-scroll
+  const isNearBottomRef = React.useRef<boolean>(true);
+
+  const sendMessageFetcher = useFetcher<typeof action>();
+  const loadMoreFetcher = useFetcher<typeof loader>();
+
+  const loadMoreMessages = React.useCallback(() => {
+    if (loadMoreFetcher.state !== "idle" || !hasMore) return;
+    const nextPage = currentPage + 1;
+    // save scroll position before loading more
+    prevScrollPositionRef.current = saveScrollPosition();
+    loadMoreFetcher.load(`/direct-message/${friendId}?page=${nextPage}`);
+  }, [currentPage, hasMore, loadMoreFetcher, friendId, prevScrollPositionRef]);
+
+  // handle loadMore fetcher response
+  React.useEffect(() => {
+    if (
+      loadMoreFetcher.state === "idle" &&
+      loadMoreFetcher.data &&
+      loadMoreFetcher?.data?.data?.messages
+    ) {
+      const result = loadMoreFetcher.data;
+      if (result.data.messages && result.data.messages.length > 0) {
+        // Prepend new messages to the beginning of the array
+        prependMessages(result.data.messages);
+        setCurrentPage((prev) => prev + 1);
+        setHasMore(result.data.hasMore || false);
+
+        // Restore scroll position after new messages are loaded
+        if (prevScrollPositionRef.current) {
+          requestAnimationFrame(() => {
+            restoreScrollPosition(prevScrollPositionRef.current!);
+          });
+        }
+      } else {
+        setHasMore(false);
+      }
+    }
+  }, [
+    loadMoreFetcher.state,
+    loadMoreFetcher.data,
+    prependMessages,
+    restoreScrollPosition,
+  ]);
+
+  // set up scroll listener
+  React.useEffect(() => {
+    const viewport = scrollContainerRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]",
+    );
+    if (viewport) {
+      const handleScroll = (e: Event) => {
+        const scrollElement = e.target as HTMLDivElement;
+        const scrollTop = scrollElement.scrollTop;
+        const threshold = 100; // Load more when within 100px of top
+
+        // update neat bottom status (within 200px of bottom)
+        const distanceToBottom =
+          scrollElement.scrollHeight - scrollTop - scrollElement.clientHeight;
+        isNearBottomRef.current = distanceToBottom < 200;
+        if (
+          scrollTop < threshold &&
+          hasMore &&
+          loadMoreFetcher.state === "idle"
+        ) {
+          loadMoreMessages();
+        }
+      };
+      viewport.addEventListener("scroll", handleScroll);
+      return () => {
+        viewport.removeEventListener("scroll", handleScroll);
+      };
+    }
+  }, [hasMore, loadMoreMessages, loadMoreFetcher.state]);
 
   // load messages when activechat change
-  useEffect(() => {
-    setMessages(data.messages);
-    // setIsInitialLoad(true);
-  }, [data.messages]);
-
-  // handle component mount (page refresh)
   React.useEffect(() => {
-    setIsInitialLoad(true);
-  }, []);
+    // saveScrollPosition(); // Save before updating
+    clearMessages();
+    const reversedMessages = [...data.messages].reverse();
+    setMessages(reversedMessages);
+    // scroll to bottom after messages are set
+    const timer = setTimeout(() => {
+      scrollToBottomInstant();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [friendId]);
 
+  // Handle component mount (page refresh)
   React.useEffect(() => {
-    const scroll = setTimeout(() => {
-      scrollToBottomSmooth();
-    }, 50);
-    return clearTimeout(scroll);
-  }, [actionData?.result]);
+    // check if new message were added at the end
+    const newMessagesAdded = messages.length > prevMessagesLenghtRef.current;
+    prevMessagesLenghtRef.current = messages.length;
+
+    if (newMessagesAdded) {
+      const lastMessage = messages[messages.length - 1];
+      // always scroll for sent messages
+      if (lastMessage.isOwn) {
+        scrollToBottomSmooth();
+      }
+      // only scroll for received message if neat bottom
+      else if (isNearBottomRef.current) {
+        scrollToBottomSmooth();
+      }
+    }
+  }, [messages, scrollToBottomSmooth]);
+
+  // React.useEffect(() => {
+  //   if (sendMessageFetcher && sendMessageFetcher.data?.success) {
+  //     scrollToBottomSmooth();
+  //   }
+  // }, [sendMessageFetcher.data]);
 
   return (
     <div className="flex h-dvh flex-col">
@@ -136,33 +264,39 @@ export default function DirectMessageFriend({
         </div>
       </header>
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-hidden">
-        <ScrollArea className="flex h-dvh w-full flex-col items-center p-3 sm:p-4">
+      <div className="flex-1 overflow-y-hidden" ref={scrollContainerRef}>
+        <ScrollArea
+          className="flex h-dvh w-full flex-col items-center overflow-y-auto p-3 sm:p-4"
+          style={{ height: "calc(100dvh - 8rem)" }}
+          // ref={scrollContainerRef}
+        >
           <div className="relative flex flex-col items-center space-y-4 p-4 pt-24">
-            {/* Welcome message */}
-            <div className="flex flex-col items-center py-8 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <MessageSquare className="h-8 w-8 text-primary" />
+            {!hasMore && (
+              <div className="flex flex-col items-center py-8 text-center">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                  <MessageSquare className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="mb-2 text-lg font-semibold">
+                  {`This is the beginning of your conversation with ${data.friendName}`}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Send a message to start the conversation
+                </p>
               </div>
-              <h3 className="mb-2 text-lg font-semibold">
-                {`This is the beginning of your conversation with ${data.friendName}`}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Send a message to start the conversation
-              </p>
-            </div>
+            )}
 
             {/* Sample messages - replace with real messages */}
 
             <div className="flex w-full flex-col space-y-4 lg:w-1/2">
-              {messages.map((message: any) => (
+              {messages.map((message, index) => (
                 <div
-                  key={message.id}
+                  key={index}
                   className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
                 >
                   <div
                     className={`max-w-xs lg:max-w-md ${message.isOwn ? "order-2" : "order-1"}`}
                   >
+                    <p>{message.sender}</p>
                     <div
                       className={`rounded-lg px-3 py-2 ${
                         message.isOwn
@@ -186,7 +320,11 @@ export default function DirectMessageFriend({
         </ScrollArea>
       </div>
       {/* Message Input */}
-      <MessageInput friendName={data.friendName} friendId={friendId} />
+      <MessageInput
+        friendName={data.friendName}
+        friendId={friendId}
+        fetcher={sendMessageFetcher}
+      />
     </div>
   );
 }
@@ -194,20 +332,22 @@ export default function DirectMessageFriend({
 function MessageInput({
   friendName,
   friendId,
+  fetcher,
 }: {
   friendName: string;
   friendId: string;
+  fetcher: ReturnType<typeof useFetcher<typeof action>>;
 }) {
-  const [message, setMessage] = useState("");
-  const fetcher = useFetcher();
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const typingTimeout = useRef<NodeJS.Timeout | null>(null);
-  const typingRef = useRef<boolean>(false);
+  const [message, setMessage] = React.useState("");
+  // const fetcher = useFetcher();
+  const inputRef = React.useRef<HTMLTextAreaElement>(null);
+  const typingTimeout = React.useRef<NodeJS.Timeout | null>(null);
+  const typingRef = React.useRef<boolean>(false);
   const layoutData = useLayoutData();
   const { send } = useWebSocketContext();
-  const addMessage = useMessagesStore((state) => state.addMessage);
+  const addMessage = useMessagesStore(useShallow((state) => state.addMessage));
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (fetcher.state === "idle" && fetcher.data && fetcher.data.success) {
       setMessage("");
       if (inputRef.current) {
