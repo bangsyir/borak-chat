@@ -21,6 +21,10 @@ type Variables = {
   friendId: string;
 };
 
+function isNumber(value: string) {
+  return !isNaN(parseFloat(value));
+}
+
 const roomsService = RoomsService(
   RoomsRepositoryImpl,
   UserService(UserRepositoryImpl),
@@ -69,6 +73,7 @@ roomsRoutes.get("/rooms/:roomId", async (c) => {
   // get rooms by current id
   const currentUser = c.get("user");
   const roomId = c.req.param("roomId");
+
   const result = await roomsService.getDetails(currentUser.sub, roomId);
 
   if (!result.ok) {
@@ -87,7 +92,19 @@ roomsRoutes.get("/rooms/:roomId/messages", async (c) => {
   const currentUser = c.get("user");
   // get roomId from param
   const publicRoomId = c.req.param("roomId");
-  const result = await roomsService.getMessages(currentUser.sub, publicRoomId);
+  const currentPage = c.req.query("page") || "1";
+
+  if (!isNumber(currentPage)) {
+    return c.json(
+      createErrorResponse("Number only, current page type is not allowed."),
+      400,
+    );
+  }
+  const result = await roomsService.getMessages(
+    currentUser.sub,
+    publicRoomId,
+    parseFloat(currentPage),
+  );
   if (!result.ok) {
     return c.json(createErrorResponse(result.message), result.statusCode);
   }

@@ -116,7 +116,7 @@ export const RoomsRepositoryImpl: RoomsRepository = {
       },
     });
   },
-  getRoomMessages: async (roomId, userId) => {
+  getRoomMessages: async (roomId, userId, pageLimit, offSet) => {
     const roomMessages = await prisma.$queryRaw<RoomMessagesResponse[]>`
       SELECT 
         rm.id, 
@@ -130,6 +130,7 @@ export const RoomsRepositoryImpl: RoomsRepository = {
       JOIN users as u ON rm.sender_id = u.id
       WHERE rm.room_id = ${roomId}
       ORDER BY rm.created_at ASC
+      LIMIT ${pageLimit} OFFSET ${offSet}
     `;
     const messages = roomMessages.map((item) => ({
       id: item.id,
@@ -139,6 +140,13 @@ export const RoomsRepositoryImpl: RoomsRepository = {
       is_own: Boolean(item.is_own),
     }));
     return messages;
+  },
+  countMessages: async (roomId) => {
+    return await prisma.roomMessage.count({
+      where: {
+        roomId,
+      },
+    });
   },
   sendMessage: async (userId, roomId, content) => {
     const message = await prisma.roomMessage.create({

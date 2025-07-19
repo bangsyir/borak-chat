@@ -24,7 +24,10 @@ export type RoomsRepository = {
   getRoomMessages: (
     roomId: number,
     userId: number,
+    pageLimit: number,
+    offSet: number,
   ) => Promise<RoomMessagesResponse[]>;
+  countMessages: (roomId: number) => Promise<number>;
   sendMessage: (
     userId: number,
     roomId: number,

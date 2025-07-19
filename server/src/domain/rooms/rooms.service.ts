@@ -3,7 +3,6 @@ import { ResultType } from "../core/shared/response.util";
 import {
   ListRoomsResponse,
   MembersListResponse,
-  RoomDetailsResponse,
   RoomMessagesResponse,
 } from "./rooms.model";
 import { RoomsRepository } from "./rooms.repositry";
@@ -116,9 +115,22 @@ export const RoomsService = (
   getMessages: async (
     userId: number,
     publicRoomId: string,
+    currentPage: number,
   ): Promise<
-    ResultType<{ room_name: string; messages: RoomMessagesResponse[] }, any>
+    ResultType<
+      {
+        room_name: string;
+        total_pages: number;
+        current_page: number;
+        has_more: boolean;
+        messages: RoomMessagesResponse[];
+      },
+      any
+    >
   > => {
+    const PAGE_LIMIT = 20;
+    const OFFSET = (currentPage - 1) * PAGE_LIMIT;
+
     try {
       const room = await repo.findRoom(publicRoomId);
       if (!room) {
@@ -136,7 +148,15 @@ export const RoomsService = (
           statusCode: 400,
         };
       }
-      const messages = await repo.getRoomMessages(room.id, userId);
+      const messages = await repo.getRoomMessages(
+        room.id,
+        userId,
+        PAGE_LIMIT,
+        OFFSET,
+      );
+
+      const totalMessages = await repo.countMessages(room.id);
+      const total_pages = Math.ceil(totalMessages / PAGE_LIMIT);
 
       (async () => {
         if (messages.length > 0) {
@@ -147,11 +167,15 @@ export const RoomsService = (
           }
         }
       })();
+
       return {
         ok: true,
         message: "success",
         data: {
           room_name: room.name,
+          total_pages,
+          current_page: currentPage,
+          has_more: currentPage === total_pages ? false : true,
           messages,
         },
         statusCode: 200,
