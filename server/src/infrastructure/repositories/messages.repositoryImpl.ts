@@ -28,7 +28,7 @@ export const MessagesRepositoryImpl: MessagesRespository = {
     `;
     return messages;
   },
-  countMessage: async (currentUserId, friendId) => {
+  countMessages: async (currentUserId, friendId) => {
     return await prisma.directMessage.count({
       where: {
         OR: [

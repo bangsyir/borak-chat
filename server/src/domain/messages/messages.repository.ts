@@ -8,7 +8,7 @@ export type MessagesRespository = {
     pageLimit: number,
     offset: number,
   ) => Promise<GetDirectMessageResponse[]>;
-  countMessage: (currentUserId: number, friendId: number) => Promise<number>;
+  countMessages: (currentUserId: number, friendId: number) => Promise<number>;
   sendMessage: (
     senderId: number,
     receiverId: number,

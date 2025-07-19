@@ -33,7 +33,7 @@ export const MessagesService = (
           statusCode: 400,
         };
       }
-      const countMessages = await messagesRepo.countMessage(
+      const countMessages = await messagesRepo.countMessages(
         currentUserId,
         friend.id,
       );
