@@ -10,7 +10,6 @@ import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
 import { Await, useFetcher, useRouteLoaderData } from "react-router";
-import { useLayoutData } from "~/hooks/use-layout-data";
 import { useMessagesAutoScroll } from "~/hooks/use-scrollable";
 import {
   Sheet,
@@ -25,9 +24,12 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const { authUser } = await import("~/lib/session.server");
   const { token } = await authUser(request);
   const roomId = params.roomId;
+  const url = new URL(request.url);
+
+  const page = url.searchParams.get("page") || "1";
 
   const resposeMessages = await fetch(
-    `${import.meta.env.VITE_API_BASE_URL}/rooms/${roomId}/messages`,
+    `${import.meta.env.VITE_API_BASE_URL}/rooms/${roomId}/messages?page=${page}`,
     {
       method: "get",
       headers: {
@@ -75,30 +77,149 @@ export async function action({ request, params }: Route.ActionArgs) {
   return { result };
 }
 
-export default function RoomIdPage({
-  loaderData,
-  actionData,
-}: Route.ComponentProps) {
+export default function RoomIdPage({ loaderData }: Route.ComponentProps) {
+  const { resultMessages, roomId } = loaderData;
   const setMessages = useRoomMessagesStore((state) => state.setMessages);
   const messages = useRoomMessagesStore((state) => state.messages);
+  const prependMessages = useRoomMessagesStore(
+    (state) => state.prependMessages,
+  );
+  const clearMessages = useRoomMessagesStore((state) => state.clearAll);
 
-  const { setIsInitialLoad, scrollToBottomSmooth, messagesEndRef } =
-    useMessagesAutoScroll(messages);
-  // handle component mount (page refresh)
-  React.useEffect(() => {
-    setIsInitialLoad(true);
-  }, []);
+  const {
+    scrollToBottomSmooth,
+    messagesEndRef,
+    saveScrollPosition,
+    restoreScrollPosition,
+    scrollToBottomInstant,
+    scrollContainerRef,
+  } = useMessagesAutoScroll();
 
+  // track previous message length for scroll destectio
+  const prevMessagesLengthRef = React.useRef<number>(messages.length);
+
+  // infinite scroll state
+  const [currentPage, setCurrentPage] = React.useState<number>(
+    resultMessages.data.current_page,
+  );
+  const [hasMore, setHasMore] = React.useState(
+    resultMessages.data.has_more || false,
+  );
+  const prevScrollPositionRef = React.useRef<{
+    scrollTop: number;
+    scrollHeight: number;
+  } | null>(null);
+
+  //tract if user is near bottom to decide if we need auto-scroll
+  const isNearBottomRef = React.useRef<boolean>(true);
+
+  const loadMoreFetcher = useFetcher<typeof loader>();
+
+  const loadMoreMessages = React.useCallback(() => {
+    if (loadMoreFetcher.state !== "idle" || !hasMore) return;
+    const nextPage = currentPage + 1;
+    // save scroll position before loading more
+    prevScrollPositionRef.current = saveScrollPosition();
+    loadMoreFetcher.load(`/rooms/${roomId}?page=${nextPage}`);
+  }, [currentPage, hasMore, loadMoreFetcher, roomId, prevScrollPositionRef]);
+
+  // handle loadMore fetcher response
   React.useEffect(() => {
-    const scroll = setTimeout(() => {
+    if (
+      loadMoreFetcher.state == "idle" &&
+      loadMoreFetcher.data &&
+      loadMoreFetcher?.data?.resultMessages?.data.messages
+    ) {
+      const result = loadMoreFetcher.data;
+      if (
+        result.resultMessages.data.messages &&
+        result.resultMessages.data.messages.length > 0
+      ) {
+        //prepend new Message to the begining of array
+        const reversedMessages = [
+          ...result.resultMessages.data.messages,
+        ].reverse();
+        prependMessages(reversedMessages);
+        setCurrentPage((prev) => prev + 1);
+        setHasMore(result.resultMessages.data.has_more || false);
+
+        // restore scroll position after new messages are load
+        if (prevScrollPositionRef.current) {
+          requestAnimationFrame(() => {
+            restoreScrollPosition(prevScrollPositionRef.current);
+          });
+        }
+      } else {
+        setHasMore(false);
+      }
+    }
+  }, [
+    loadMoreFetcher.state,
+    loadMoreFetcher.data,
+    prependMessages,
+    restoreScrollPosition,
+  ]);
+
+  // set up scroll listener
+  React.useEffect(() => {
+    const viewport = scrollContainerRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]",
+    );
+    if (viewport) {
+      const handleScroll = (e: Event) => {
+        const scrollElement = e.target as HTMLDivElement;
+        const scrollTop = scrollElement.scrollTop;
+        const threshold = 100; // Loadmore when within 100px of top
+        // update neat bottom status (within 200px of bottom)
+        const distanceToBottom =
+          scrollElement.scrollHeight - scrollTop - scrollElement.clientHeight;
+        isNearBottomRef.current = distanceToBottom < 200;
+        if (
+          scrollTop < threshold &&
+          hasMore &&
+          loadMoreFetcher.state === "idle"
+        ) {
+          loadMoreMessages();
+        }
+      };
+      viewport.addEventListener("scroll", handleScroll);
+      return () => {
+        viewport.removeEventListener("scroll", handleScroll);
+      };
+    }
+  }, [hasMore, loadMoreMessages, loadMoreFetcher.state]);
+
+  // load message when active chat change
+  React.useEffect(() => {
+    // clear messages before load new messages
+    clearMessages();
+    const reversedMessages = [...resultMessages.data.messages].reverse();
+    setMessages(reversedMessages);
+    // scroll to bottom after messages area set
+    const timer = setTimeout(() => {
       scrollToBottomSmooth();
-    }, 50);
-    return clearTimeout(scroll);
-  }, [actionData?.result]);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [roomId]);
 
+  // Handle component mount (page refresh)
   React.useEffect(() => {
-    setMessages(loaderData.resultMessages.data.messages);
-  }, [loaderData.resultMessages.data.messages]);
+    // check if new messages were added at the end
+    const newMessagesAdded = messages.length > prevMessagesLengthRef.current;
+    prevMessagesLengthRef.current = messages.length;
+
+    if (newMessagesAdded) {
+      const lastMessage = messages[messages.length - 1];
+      // always scroll for sent messages
+      if (lastMessage.is_own) {
+        scrollToBottomSmooth();
+      }
+      // only scroll for receiverd message if new bottom
+      else if (isNearBottomRef.current) {
+        scrollToBottomInstant();
+      }
+    }
+  }, [messages, scrollToBottomSmooth, scrollToBottomInstant]);
 
   return (
     <div className="flex h-dvh flex-col">
@@ -121,32 +242,37 @@ export default function RoomIdPage({
         </div>
         <ListMemberSheet />
       </header>
-      <div className="flex-1 overflow-hidden">
-        <ScrollArea className="flex h-dvh w-full flex-col items-center p-3 sm:p-4">
-          <div className="relative flex flex-col items-center space-y-4 p-4 pt-24">
+      <div className="flex-1 overflow-y-hidden" ref={scrollContainerRef}>
+        <ScrollArea
+          className="flex h-dvh w-full flex-col items-center overflow-y-auto p-3 sm:p-4"
+          style={{ height: "calc(100dvh - 8rem)" }}
+        >
+          <div className="relative flex flex-col items-center space-y-4 p-4">
             {/* Welcome message */}
-            <div className="flex flex-col items-center py-8 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <MessageSquare className="h-8 w-8 text-primary" />
+            {!hasMore && (
+              <div className="flex flex-col items-center py-8 text-center">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                  <MessageSquare className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="mb-2 text-lg">
+                  {`Let's start new conversation with ${resultMessages.data.room_name} group`}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Send a message to start the conversation
+                </p>
               </div>
-              <h3 className="mb-2 text-lg">
-                {`Let's start new conversation with ${loaderData.resultMessages.data.room_name} group`}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Send a message to start the conversation
-              </p>
-            </div>
+            )}
 
             {/* Sample messages - replace with real messages */}
 
             <div className="flex w-full flex-col space-y-4 lg:w-1/2">
-              {messages.map((message: any) => (
+              {messages.map((message, index) => (
                 <div
-                  key={message.id}
+                  key={index}
                   className={`flex ${message.is_own ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-xs lg:max-w-md ${message.isOwn ? "order-2" : "order-1"}`}
+                    className={`max-w-xs lg:max-w-md ${message.is_own ? "order-2" : "order-1"}`}
                   >
                     <p>{message.sender}</p>
                     <div
@@ -191,8 +317,6 @@ function MessageInput({
   const fetcher = useFetcher();
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
   const typingTimeout = React.useRef<NodeJS.Timeout | null>(null);
-  const addMessage = useRoomMessagesStore((state) => state.addMessage);
-  const layoutData = useLayoutData();
 
   React.useEffect(() => {
     if (fetcher.state === "idle" && fetcher.data && fetcher.data.success) {
@@ -213,15 +337,6 @@ function MessageInput({
       { content: message },
       { method: "post", action: `/rooms/${roomId}` },
     );
-    const tempId = Date.now();
-    const optomisticMessage = {
-      id: tempId,
-      sender: layoutData.user.data.username,
-      content: message,
-      is_own: true,
-      created_at: new Date(),
-    };
-    addMessage(optomisticMessage);
 
     setMessage("");
     if (typingTimeout.current) {
