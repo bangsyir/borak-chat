@@ -129,7 +129,7 @@ export const RoomsRepositoryImpl: RoomsRepository = {
       FROM room_messages as rm
       JOIN users as u ON rm.sender_id = u.id
       WHERE rm.room_id = ${roomId}
-      ORDER BY rm.created_at ASC
+      ORDER BY rm.created_at DESC
       LIMIT ${pageLimit} OFFSET ${offSet}
     `;
     const messages = roomMessages.map((item) => ({
