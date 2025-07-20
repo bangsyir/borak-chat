@@ -175,7 +175,7 @@ export const RoomsService = (
           room_name: room.name,
           total_pages,
           current_page: currentPage,
-          has_more: currentPage === total_pages ? false : true,
+          has_more: currentPage >= total_pages ? false : true,
           messages,
         },
         statusCode: 200,
