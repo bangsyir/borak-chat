@@ -7,7 +7,6 @@ import { Button } from "~/components/ui/button";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { SidebarTrigger } from "~/components/ui/sidebar";
 import { Textarea } from "~/components/ui/textarea";
-import { useLayoutData } from "~/hooks/use-layout-data";
 import { useMessagesStore } from "~/hooks/use-messages-store";
 import { useOnlineStatusStore } from "~/hooks/use-online-status-store";
 import { useMessagesAutoScroll } from "~/hooks/use-scrollable";
@@ -15,7 +14,6 @@ import { useTypingStore } from "~/hooks/use-typing-store";
 import { DateFormatDistance } from "~/lib/date-format";
 import { cn } from "~/lib/utils";
 import type { Route } from "./+types/direct-message.$friendId";
-import { useShallow } from "zustand/react/shallow";
 
 export type DirectMessage = {
   id: number;
@@ -89,7 +87,6 @@ export async function action({ request, params }: Route.ActionArgs) {
 
 export default function DirectMessageFriend({
   loaderData,
-  actionData,
 }: Route.ComponentProps) {
   const { data, friendId } = loaderData;
 
@@ -147,7 +144,8 @@ export default function DirectMessageFriend({
       const result = loadMoreFetcher.data;
       if (result.data.messages && result.data.messages.length > 0) {
         // Prepend new messages to the beginning of the array
-        prependMessages(result.data.messages);
+        const reversedMessages = [...result.data.messages].reverse();
+        prependMessages(reversedMessages);
         setCurrentPage((prev) => prev + 1);
         setHasMore(result.data.hasMore || false);
 
@@ -230,11 +228,11 @@ export default function DirectMessageFriend({
     }
   }, [messages, scrollToBottomSmooth]);
 
-  // React.useEffect(() => {
-  //   if (sendMessageFetcher && sendMessageFetcher.data?.success) {
-  //     scrollToBottomSmooth();
-  //   }
-  // }, [sendMessageFetcher.data]);
+  React.useEffect(() => {
+    if (sendMessageFetcher && sendMessageFetcher.data?.success) {
+      scrollToBottomSmooth();
+    }
+  }, [sendMessageFetcher.data]);
 
   return (
     <div className="flex h-dvh flex-col">
@@ -343,9 +341,7 @@ function MessageInput({
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
   const typingTimeout = React.useRef<NodeJS.Timeout | null>(null);
   const typingRef = React.useRef<boolean>(false);
-  const layoutData = useLayoutData();
   const { send } = useWebSocketContext();
-  const addMessage = useMessagesStore(useShallow((state) => state.addMessage));
 
   React.useEffect(() => {
     if (fetcher.state === "idle" && fetcher.data && fetcher.data.success) {
@@ -394,16 +390,6 @@ function MessageInput({
       { content: message },
       { method: "post", action: `/direct-message/${friendId}` },
     );
-    const tempId = Date.now();
-    const optomisticMessage = {
-      id: tempId,
-      content: message,
-      isRead: false,
-      isOwn: true,
-      createdAt: new Date(),
-      sender: layoutData.user.data.username,
-    };
-    addMessage(optomisticMessage);
 
     // clear typing status
     send({
