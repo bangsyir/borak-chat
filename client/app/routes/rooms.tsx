@@ -1,5 +1,4 @@
 import React from "react";
-import { useRevalidator } from "react-router";
 import { useChatContext } from "~/components/chat-provider";
 import { ChatWelcome } from "~/components/chat-welcome";
 import type { Route } from "./+types/rooms";
@@ -37,7 +36,6 @@ export async function action({ request }: Route.ActionArgs) {
       body: JSON.stringify({ name: roomName, isPrivate }),
     });
     const result = await response.json();
-    console.log({ result });
 
     return { ...result };
   }
