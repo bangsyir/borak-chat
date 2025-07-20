@@ -38,7 +38,7 @@ export const MessagesService = (
         friend.id,
       );
       const totalPage = Math.ceil(countMessages / PAGE_LIMIT);
-      const hasMore = totalPage === currentPage ? false : true;
+      const hasMore = currentPage >= totalPage ? false : true;
       const result = await messagesRepo.getMessages(
         currentUserId,
         friend.id,
