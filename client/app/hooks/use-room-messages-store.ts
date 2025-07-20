@@ -11,6 +11,7 @@ interface RoomMessageStoreType {
   messages: Message[];
   setMessages: (value: Message[]) => void;
   addMessage: (value: Message) => void;
+  prependMessages: (value: Message[]) => void;
   clearAll: () => void;
 }
 
@@ -27,9 +28,14 @@ export const useRoomMessagesStore = create<RoomMessageStoreType>((set) => ({
         return { messages: state.messages };
       }
       return {
-        messages: [...state.messages, newMessage],
+        messages: [...new Set([...state.messages, newMessage])],
       };
     });
+  },
+  prependMessages: (messages) => {
+    set((state) => ({
+      messages: [...new Set([...messages, ...state.messages])],
+    }));
   },
   clearAll: () => {
     set(() => ({
