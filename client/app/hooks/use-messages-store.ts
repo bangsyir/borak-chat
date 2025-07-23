@@ -32,7 +32,7 @@ export const useMessagesStore = create<MessagesType>((set) => ({
         };
       }
       return {
-        messages: [...state.messages, newMessage],
+        messages: [...new Set([...state.messages, newMessage])],
       };
     });
   },
