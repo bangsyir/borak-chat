@@ -197,7 +197,7 @@ export default function RoomIdPage({ loaderData }: Route.ComponentProps) {
     setMessages(reversedMessages);
     // scroll to bottom after messages area set
     const timer = setTimeout(() => {
-      scrollToBottomSmooth();
+      scrollToBottomInstant();
     }, 100);
     return () => clearTimeout(timer);
   }, [roomId]);
