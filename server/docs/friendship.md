@@ -12,7 +12,7 @@ Request Body:
 
 ```json
 {
-  "friendId": 2
+  "friendPublicId": "asas3nkasd2"
 }
 ```
 
@@ -21,16 +21,25 @@ Response Success Body:
 ```json
 {
   "success": true,
-  "Message": "Friend request sent."
+  "message": "Friend request sent."
 }
 ```
 
 Response Error Body:
 
 ```json
+## not found error
 {
   "success": false,
   "message": "user not found"
+}
+## field error
+{
+    "success": false,
+    "message": "invalid field",
+    "errors": {
+        "friendPublicId": ["Expected string, received number"]
+    }
 }
 ```
 
@@ -55,12 +64,17 @@ Response Success Body:
 ```json
 {
   "success": true,
+  "messae": "success retrive incoming list",
   "data": [
     {
-      "id": 2
-      "username": "test",
-      "requestedAt": "1-4-2025"
-    }
+        "status": "pending",
+        "createdAt": "2025-07-03T08:28:46.135Z",
+        "token": "0197cf67-0aae-7000-bf22-cd1b64d055c9",
+        "requester": {
+            "public_id": "asda32wes",
+            "username": "testname"
+        }
+    } 
   ]
 }
 ```
@@ -86,12 +100,16 @@ Response Success Body:
 ```json
 {
   "success": true,
+  "messae": "success retrive incoming list",
   "data": [
     {
-      "id": 1
-      "username": "test",
-      "requestedAt": "1-4-2025"
-    }
+        "status": "pending",
+        "createdAt": "2025-07-03T08:28:46.135Z",
+        "requester": {
+            "public_id": "asda32wes",
+            "username": "testname"
+        }
+    } 
   ]
 }
 ```
@@ -189,16 +207,16 @@ Response Success Body
   {
     "success": true,
     "data": [
-      {
-        "id": 1
-        "username": "test",
-        "requestedAt": "1-4-2025"
-      },
-      {
-        "id": 2
-        "username": "test2",
-        "requestedAt": "1-4-2025"
-      }
+      	{
+			"publicId": "DRVQ47I1W5",
+			"username": "testname",
+			"createdAt": "2025-06-09T09:53:04.207Z"
+		},
+		{
+			"publicId": "F2GV2Y4CK2",
+			"username": "testname2",
+			"createdAt": "2025-06-26T07:19:27.089Z"
+		}    
     ]
   }
 }

@@ -12,31 +12,28 @@ Response Success Body :
 ```json
 {
   "success": true,
-  "data": [
-    {
-      "user_id": 1,
-      "content": "test message",
-      "createdAt": "1-3-2025",
-      "sender": {
-                "username": "test1"
-      },
-      "receiver": {
-                "username": "test2"
+  "data": {
+        "friendName": "testname",
+        "currentPage" : 1,
+        "totalPage" : 11,
+        "hasMore": true,
+        "messages": [
+            {
+                "id": 1,
+                "content": "tis his content",
+                "isRead": false,
+                "sender": "bangsyir",
+                "isOwn": false 
             },
-    },
-    {
-      "user_id": 2,
-      "content": "test message",
-      "createdAt": "1-3-2025"
-            "sender": {
-                "username": "test1"
-      },
-      "receiver": {
-                "username": "test2"
+            {
+                "id": 2,
+                "content": "tis his content",
+                "isRead": false,
+                "sender": "testname",
+                "isOwn": true 
             },
-
+        ]
     }
-  ]
 }
 ```
 

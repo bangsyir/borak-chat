@@ -59,22 +59,26 @@ Response Success Body :
 
 ```json
 {
-  "success": true,
-  "message": "success",
-  "data": [
-    {
-      "id": 1,
-      "name": "test name",
-      "last_message": "test message",
-      "last_message_created_at": "1-3-2025"
-    },
-    {
-      "id": 2,
-      "name": "test room",
-      "last_message": "test message",
-      "last_message_created_at": "1-3-2025"
-    }
-  ]
+	"success": true,
+	"message": "success",
+	"data": [
+		{
+			"publicId": "f5b0b6cb-537a-4ada-8877-12dea9c650d3",
+			"name": "test room",
+			"lastMessage": "hello",
+			"lastMessageCreated": "2025-07-23T09:35:55.739Z",
+			"totalMember": "3",
+			"isPrivate": true
+		},
+		{
+			"publicId": "fac37ec8-84db-4dbb-aa89-d7bbe55e05fe",
+			"name": "programing zaman now",
+			"lastMessage": null,
+			"lastMessageCreated": null,
+			"totalMember": "1",
+			"isPrivate": true
+		}
+	]
 }
 ```
 
@@ -99,21 +103,25 @@ Response Success Body :
 
 ```json
 {
-  "success": true,
-  "data": {
-    "id": 1
-    "name": "test name",
-    "member": [
-      {
-        "id": 1,
-        "name": "testname"
-      },
-      {
-        "id": 2,
-        "name": "testname"
-      }
-    ]
-  }
+	"success": true,
+	"message": "successfull",
+	"data": [
+		{
+			"publicId": "DRVQ47I1W5",
+			"username": "testname",
+			"isAdmin": true
+		},
+		{
+			"publicId": "5OS3F5I686",
+			"username": "bangsyir",
+			"isAdmin": false
+		},
+		{
+			"publicId": "F2GV2Y4CK2",
+			"username": "testname2",
+			"isAdmin": false
+		}
+	]
 }
 ```
 
@@ -148,14 +156,29 @@ Response Success Body :
 ```json
 {
   "success": true,
-  "data": [
-    {
-      "message_id": 1,
-      "content": "this is content",
-      "sender_name": "bangsyir",
-      "created_at": "1-2-2025"
-    }
-  ]
+  "message": "success",
+  "data": {
+        "room_name": "test room",
+		"total_pages": 3,
+		"current_page": 2,
+		"has_more": true,
+        "messages": [
+            {
+				"id": 26,
+				"sender": "testname",
+				"content": "how are you",
+				"created_at": "2025-07-08T13:55:53.718Z",
+				"is_own": false
+			},
+			{
+				"id": 25,
+				"sender": "testname",
+				"content": "hello",
+				"created_at": "2025-07-08T13:55:35.876Z",
+				"is_own": false
+			},
+        ]
+    } 
 }
 ```
 

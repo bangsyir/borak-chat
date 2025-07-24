@@ -106,7 +106,7 @@ Response Success Body
   "success": true,
   "message": "success",
   "data": {
-    "id": 1,
+    "public_id": "public id",
     "username": "testusername",
     "email": "test@mail.com",
     "createdAt": "1-5-2025",
