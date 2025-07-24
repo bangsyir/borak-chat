@@ -51,7 +51,7 @@ export const MessagesRepositoryImpl: MessagesRespository = {
   },
   updateRead: async (senderId, receiverId) => {
     return await prisma.directMessage.updateMany({
-      where: { senderId: senderId, receiverId: receiverId, isRead: false },
+      where: { senderId: receiverId, receiverId: senderId, isRead: false },
       data: {
         isRead: true,
       },

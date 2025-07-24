@@ -53,6 +53,14 @@ export const MessagesService = (
         sender: item.sender,
         isOwn: Boolean(item.isOwn),
       }));
+
+      // update read anonymously
+      (async () => {
+        if (result.length > 0) {
+          await messagesRepo.updateRead(currentUserId, friend.id);
+        }
+      })();
+
       const data = {
         friendName: friend.username,
         currentPage,
