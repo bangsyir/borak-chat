@@ -1,4 +1,7 @@
-import { RoomMessagesResponse } from "../../domain/rooms/rooms.model";
+import {
+  ListRoomsResponse,
+  RoomMessagesResponse,
+} from "../../domain/rooms/rooms.model";
 import { RoomsRepository } from "../../domain/rooms/rooms.repositry";
 import { prisma } from "../db/db";
 
@@ -30,7 +33,7 @@ export const RoomsRepositoryImpl: RoomsRepository = {
     });
   },
   getRooms: async (userId) => {
-    return await prisma.$queryRaw`
+    return await prisma.$queryRaw<ListRoomsResponse[]>`
         WITH LatestGroupMessage AS (
           SELECT
             rm.room_id,
@@ -122,10 +125,10 @@ export const RoomsRepositoryImpl: RoomsRepository = {
         rm.id, 
         u.username as sender, 
         rm.content,
-        rm.created_at,
+        rm.created_at as createdAt,
         CASE 
         WHEN rm.sender_id = ${userId} THEN TRUE ELSE FALSE
-        END as is_own
+        END as isOwn
       FROM room_messages as rm
       JOIN users as u ON rm.sender_id = u.id
       WHERE rm.room_id = ${roomId}
@@ -136,8 +139,8 @@ export const RoomsRepositoryImpl: RoomsRepository = {
       id: item.id,
       sender: item.sender,
       content: item.content,
-      created_at: item.created_at,
-      is_own: Boolean(item.is_own),
+      createdAt: item.createdAt,
+      isOwn: Boolean(item.isOwn),
     }));
     return messages;
   },

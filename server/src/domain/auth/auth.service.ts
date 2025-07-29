@@ -17,7 +17,7 @@ export const AuthService = (
     );
     if (!isValid) throw new Error("Invalid username or password");
 
-    const token = await authRepo.genereteToken(user.id, user.public_id);
+    const token = await authRepo.genereteToken(user.id, user.publicId);
     return { token };
   },
   register: async (input: CreateUserData): Promise<{ message: string }> => {
@@ -46,7 +46,7 @@ export const AuthService = (
     const user = await userservice.findByIdWithoutPassowrd(userId);
     if (!user) throw new Error("User Not Found");
     return {
-      public_id: user.public_id,
+      publicId: user.publicId,
       username: user.username,
       email: user.email,
       createdAt: user.createdAt,

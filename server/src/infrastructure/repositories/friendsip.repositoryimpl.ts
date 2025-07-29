@@ -28,7 +28,7 @@ export const FriendshipRepositoryImpl: FriendshipRespository = {
         token: true,
         requester: {
           select: {
-            public_id: true,
+            publicId: true,
             username: true,
           },
         },
@@ -44,7 +44,7 @@ export const FriendshipRepositoryImpl: FriendshipRespository = {
         createdAt: true,
         requestee: {
           select: {
-            public_id: true,
+            publicId: true,
             username: true,
           },
         },
@@ -73,17 +73,6 @@ export const FriendshipRepositoryImpl: FriendshipRespository = {
     });
   },
   friendList: async (userId: number, status: string) => {
-    //    WITH LastMessage AS (
-    //SELECT dm.id, dm.sender_id, dm.receiver_id, dm.content, dm.created_at,
-    //ROW_NUMBER() OVER (ORDER BY dm.created_at DESC) as rn
-    //FROM direct_messages as dm
-    //)
-    //SELECT DISTINCT u2.public_id as publicId, u2.username as username, f.created_at as createdAt, lm.content as lastMessage
-    //FROM users as u1
-    //JOIN friendships as f ON u1.id = f.requestee_id OR u1.id = f.requester_id
-    //JOIN users as u2 ON f.requestee_id = u2.id OR f.requester_id = u2.id
-    //LEFT JOIN LastMessage as lm ON u1.id = lm.sender_id AND u2.id = lm.receiver_id OR u1.id = lm.receiver_id AND u2.id = lm.sender_id AND lm.rn = 1
-    //WHERE u1.id = 2 AND NOT u2.id = 2 AND status = "accepted";
     return await prisma.$queryRaw`
       SELECT DISTINCT u2.public_id as publicId, u2.username as username, f.created_at as createdAt 
       FROM users as u1

@@ -1,5 +1,5 @@
 export interface UserType {
-  public_id: string;
+  publicId: string;
   username: string;
   email?: string | null;
   createdAt: Date;

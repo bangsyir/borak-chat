@@ -33,6 +33,6 @@ export type RoomMessagesResponse = {
   id: number;
   sender: string;
   content: string;
-  created_at: Date;
-  is_own: boolean;
+  createdAt: Date;
+  isOwn: boolean;
 };

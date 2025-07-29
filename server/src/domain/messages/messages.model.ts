@@ -1,8 +1,8 @@
 export type GetDirectMessageResponse = {
   id: number;
   content: string;
-  is_read: boolean;
+  isRead: boolean;
   isOwn: boolean;
-  created_at: Date;
+  createdAt: Date;
   sender: string;
 };

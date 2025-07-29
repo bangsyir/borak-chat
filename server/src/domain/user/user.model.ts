@@ -13,7 +13,7 @@ export interface UpdateUserData {
 
 export interface UserType {
   id: number;
-  public_id: string;
+  publicId: string;
   username: string;
   email?: string | null;
   passwordHash: string;

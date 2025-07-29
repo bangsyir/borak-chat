@@ -119,10 +119,10 @@ export const RoomsService = (
   ): Promise<
     ResultType<
       {
-        room_name: string;
-        total_pages: number;
-        current_page: number;
-        has_more: boolean;
+        roomName: string;
+        totalPages: number;
+        currentPage: number;
+        hasMore: boolean;
         messages: RoomMessagesResponse[];
       },
       any
@@ -156,7 +156,7 @@ export const RoomsService = (
       );
 
       const totalMessages = await repo.countMessages(room.id);
-      const total_pages = Math.ceil(totalMessages / PAGE_LIMIT);
+      const totalPages = Math.ceil(totalMessages / PAGE_LIMIT);
 
       (async () => {
         if (messages.length > 0) {
@@ -172,10 +172,10 @@ export const RoomsService = (
         ok: true,
         message: "success",
         data: {
-          room_name: room.name,
-          total_pages,
-          current_page: currentPage,
-          has_more: currentPage >= total_pages ? false : true,
+          roomName: room.name,
+          totalPages,
+          currentPage: currentPage,
+          hasMore: currentPage >= totalPages ? false : true,
           messages,
         },
         statusCode: 200,
@@ -199,7 +199,6 @@ export const RoomsService = (
       };
     }
     const isMember = await repo.isMember(userId, room.id);
-    console.log({ isMember });
     if (!isMember) {
       return {
         ok: false,

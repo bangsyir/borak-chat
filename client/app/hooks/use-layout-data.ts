@@ -4,7 +4,7 @@ export interface UserData {
   success: boolean;
   message: string;
   data: {
-    public_id: string;
+    publicId: string;
     username: string;
     email: string;
     createdAt: Date;

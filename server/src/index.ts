@@ -117,7 +117,6 @@ const serverConfig = {
         setTypingStatus(userPublicId, targetPublicId, false);
       }
       if (parsed.type === "join_room") {
-        console.log("hai");
         handleRoomJoin(ws, { userPublicId, roomId: parsed.roomId });
       }
     },

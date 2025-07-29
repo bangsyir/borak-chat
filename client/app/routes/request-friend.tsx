@@ -1,4 +1,4 @@
-import { redirect, type ActionFunctionArgs } from "react-router";
+import { type ActionFunctionArgs } from "react-router";
 
 interface RequestFriendResultType {
   success: boolean;

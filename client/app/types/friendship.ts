@@ -3,11 +3,11 @@ export interface ResponseStatusType {
   createdAt: Date;
   token: string;
   requestee?: {
-    public_id: string;
+    publicId: string;
     username: string;
   };
   requester?: {
-    public_id: string;
+    publicId: string;
     username: string;
   };
 }

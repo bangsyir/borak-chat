@@ -8,8 +8,8 @@ export const MessagesRepositoryImpl: MessagesRespository = {
       SELECT
         dm.id,
         dm.content,
-        dm.created_at,
-        dm.is_read,
+        dm.created_at as createdAt,
+        dm.is_read as isRead,
         sender.username as sender,
         CASE
           WHEN dm.sender_id = ${currentUserId} THEN TRUE

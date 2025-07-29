@@ -8,15 +8,14 @@ import { prisma } from "../db/db";
 
 export const UserRepositoryImpl: UserRepository = {
   create: async (data: CreateUserData): Promise<UserType | null> => {
-    const user = await prisma.user.create({
+    return await prisma.user.create({
       data: {
-        public_id: data.publicId,
+        publicId: data.publicId,
         username: data.username,
         email: data.email,
         passwordHash: data.password,
       },
     });
-    return user;
   },
   update: async (
     data: UpdateUserData,
@@ -25,7 +24,7 @@ export const UserRepositoryImpl: UserRepository = {
     return await prisma.user.update({
       select: {
         id: true,
-        public_id: true,
+        publicId: true,
         username: true,
         email: true,
         createdAt: true,
@@ -48,10 +47,10 @@ export const UserRepositoryImpl: UserRepository = {
     publicId: string,
   ): Promise<Omit<UserType, "passwordHash"> | null> => {
     return await prisma.user.findUnique({
-      where: { public_id: publicId },
+      where: { publicId: publicId },
       select: {
         id: true,
-        public_id: true,
+        publicId: true,
         username: true,
         email: true,
         createdAt: true,
@@ -60,7 +59,8 @@ export const UserRepositoryImpl: UserRepository = {
     });
   },
   findByUsername: async (username: string): Promise<UserType | null> => {
-    return await prisma.user.findUnique({ where: { username } });
+    const response = await prisma.user.findFirst({ where: { username } });
+    return response;
   },
   findByEmail: async (email: string): Promise<UserType | null> => {
     return await prisma.user.findFirst({ where: { email } });
@@ -75,7 +75,7 @@ export const UserRepositoryImpl: UserRepository = {
       where: { id },
       select: {
         id: true,
-        public_id: true,
+        publicId: true,
         username: true,
         email: true,
         createdAt: true,

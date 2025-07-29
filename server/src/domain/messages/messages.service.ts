@@ -48,8 +48,8 @@ export const MessagesService = (
       const messages = result.map((item) => ({
         id: item.id,
         content: item.content,
-        createdAt: item.created_at,
-        isRead: item.is_read,
+        createdAt: item.createdAt,
+        isRead: item.isRead,
         sender: item.sender,
         isOwn: Boolean(item.isOwn),
       }));
@@ -113,10 +113,10 @@ export const MessagesService = (
         sender: friend.username,
         isOwn: false,
       };
-      sendToUser(friend.public_id, {
+      sendToUser(friend.publicId, {
         type: "NEW_MESSAGE",
         userPublicId: currentUserPublicId,
-        receiverPublicId: friend.public_id,
+        receiverPublicId: friend.publicId,
         payload: payload,
       });
       return {

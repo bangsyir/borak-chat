@@ -168,18 +168,5 @@ roomsRoutes.post(
     return c.json(createSuccessResponse(result.message), result.statusCode);
   },
 );
-//roomsRoutes.put("/rooms/:roomId/messages/:messageId/read", async (c) => {
-//  // get current user
-//  const currentUser = c.get("user");
-//  // get roomId
-//  const roomId = c.req.param("roomId");
-//  // get last messageId
-//  const lastMessageId = c.req.param("messageId");
-//  // execute room service
-//
-//  // return error
-//  // return success
-//  return c.json();
-//});
-//
+
 export { roomsRoutes };

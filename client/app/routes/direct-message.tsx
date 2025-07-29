@@ -17,7 +17,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const result = await response.json();
 
-  const friends = result.data.map((item: any) => ({
+  const friends = await result.data.map((item: any) => ({
     id: item.publicId,
     name: item.username,
     avatar: "",

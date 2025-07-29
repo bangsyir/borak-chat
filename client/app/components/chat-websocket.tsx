@@ -103,9 +103,9 @@ export function ChatwebSocketProvider({
                   id: payload.id,
                   content: payload.content,
                   sender: payload.sender,
-                  is_own: data.userPublicId !== friendId,
-                  is_read: true,
-                  created_at: new Date(),
+                  isOwn: data.userPublicId !== friendId,
+                  isRead: true,
+                  createdAt: new Date(),
                 };
                 addRoomMessage(newMessage);
               }
@@ -242,9 +242,9 @@ export function ChatwebSocketProvider({
                   id: payload.id,
                   content: payload.content,
                   sender: payload.sender,
-                  is_own: data.userPublicId !== friendId,
-                  is_read: true,
-                  created_at: new Date(),
+                  isOwn: data.userPublicId !== friendId,
+                  isRead: true,
+                  createdAt: new Date(),
                 };
                 addRoomMessage(newMessage);
               }

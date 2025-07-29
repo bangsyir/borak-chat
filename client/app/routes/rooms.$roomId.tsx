@@ -100,10 +100,10 @@ export default function RoomIdPage({ loaderData }: Route.ComponentProps) {
 
   // infinite scroll state
   const [currentPage, setCurrentPage] = React.useState<number>(
-    resultMessages.data.current_page,
+    resultMessages.data.currentPage,
   );
   const [hasMore, setHasMore] = React.useState(
-    resultMessages.data.has_more || false,
+    resultMessages.data.hasMore || false,
   );
   const prevScrollPositionRef = React.useRef<{
     scrollTop: number;
@@ -141,7 +141,7 @@ export default function RoomIdPage({ loaderData }: Route.ComponentProps) {
         ].reverse();
         prependMessages(reversedMessages);
         setCurrentPage((prev) => prev + 1);
-        setHasMore(result.resultMessages.data.has_more || false);
+        setHasMore(result.resultMessages.data.hasMore || false);
 
         // restore scroll position after new messages are load
         if (prevScrollPositionRef.current) {
@@ -211,7 +211,7 @@ export default function RoomIdPage({ loaderData }: Route.ComponentProps) {
     if (newMessagesAdded) {
       const lastMessage = messages[messages.length - 1];
       // always scroll for sent messages
-      if (lastMessage.is_own) {
+      if (lastMessage.isOwn) {
         scrollToBottomSmooth();
       }
       // only scroll for receiverd message if new bottom
@@ -230,12 +230,12 @@ export default function RoomIdPage({ loaderData }: Route.ComponentProps) {
           <div className="flex min-w-0 items-center gap-3">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="text-xs uppercase">
-                {loaderData.resultMessages.data.room_name.slice(0, 2)}
+                {loaderData.resultMessages.data.roomName.slice(0, 2)}
               </AvatarFallback>
             </Avatar>
             <div className="flex items-center gap-1">
               <h2 className="font-semibold">
-                {loaderData.resultMessages.data.room_name}
+                {loaderData.resultMessages.data.roomName}
               </h2>
             </div>
           </div>
@@ -255,7 +255,7 @@ export default function RoomIdPage({ loaderData }: Route.ComponentProps) {
                   <MessageSquare className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="mb-2 text-lg">
-                  {`Let's start new conversation with ${resultMessages.data.room_name} group`}
+                  {`Let's start new conversation with ${resultMessages.data.roomName} group`}
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   Send a message to start the conversation
@@ -269,15 +269,15 @@ export default function RoomIdPage({ loaderData }: Route.ComponentProps) {
               {messages.map((message, index) => (
                 <div
                   key={index}
-                  className={`flex ${message.is_own ? "justify-end" : "justify-start"}`}
+                  className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-xs lg:max-w-md ${message.is_own ? "order-2" : "order-1"}`}
+                    className={`max-w-xs lg:max-w-md ${message.isOwn ? "order-2" : "order-1"}`}
                   >
                     <p>{message.sender}</p>
                     <div
                       className={`rounded-lg px-3 py-2 ${
-                        message.is_own
+                        message.isOwn
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted"
                       }`}
@@ -285,9 +285,9 @@ export default function RoomIdPage({ loaderData }: Route.ComponentProps) {
                       <p className="text-sm">{message.content}</p>
                     </div>
                     <p
-                      className={`mt-1 px-3 text-xs text-muted-foreground ${message.is_own ? "text-end" : "text-start"}`}
+                      className={`mt-1 px-3 text-xs text-muted-foreground ${message.isOwn ? "text-end" : "text-start"}`}
                     >
-                      {DateFormatDistance(message.created_at)}
+                      {DateFormatDistance(message.createdAt)}
                     </p>
                   </div>
                 </div>

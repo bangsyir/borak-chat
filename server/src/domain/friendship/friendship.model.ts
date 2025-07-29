@@ -8,7 +8,7 @@ export type IncomingListType = {
   createdAt: Date;
   token: string | null;
   requester: {
-    public_id: string;
+    publicId: string;
     username: string;
   };
 };
@@ -17,7 +17,7 @@ export type OutgoingListType = {
   status: string;
   createdAt: Date;
   requestee: {
-    public_id: string;
+    publicId: string;
     username: string;
   };
 };

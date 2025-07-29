@@ -45,6 +45,7 @@ authRoutes.post("/login", validateLogin, async (c) => {
     const result = await authservice.login(validate);
     return c.json(createSuccessResponse("Success", result));
   } catch (error: any) {
+    console.log({ error });
     return c.json(createErrorResponse(error?.message), 400);
   }
 });

@@ -3,7 +3,6 @@ import {
   MessageSquare,
   Users,
   Search,
-  Plus,
   Medal,
   Lock,
   UserPlus,

@@ -1,9 +1,4 @@
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "./ui/sidebar";
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useFetcher, useNavigate } from "react-router";
 import React, { useRef } from "react";
@@ -27,7 +22,6 @@ import { Button } from "./ui/button";
 
 export function NavUser() {
   const loaderData = useLayoutData();
-  const { isMobile } = useSidebar();
 
   const fetcher = useFetcher();
   const navigate = useNavigate();
@@ -50,7 +44,7 @@ export function NavUser() {
 
   function handleCopy() {
     navigator.clipboard
-      .writeText(loaderData.user.data.public_id)
+      .writeText(loaderData.user.data.publicId)
       .then(() => {
         toast("Text copied to clipboard!");
       })
@@ -104,7 +98,7 @@ export function NavUser() {
               <div className="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                 <dt className="text-sm leading-6 font-medium">User ID</dt>
                 <dd className="mt-1 flex items-center justify-between text-sm leading-6 text-muted-foreground sm:col-span-2 sm:mt-0">
-                  {loaderData.user.data.public_id}
+                  {loaderData.user.data.publicId}
                   <Button variant="ghost" onClick={handleCopy}>
                     <Copy className="h-4 w-4" />
                   </Button>

@@ -325,38 +325,3 @@ Auth Response Error Body :
   "message": "Unauthorized"
 }
 ```
-
-## Update Read Status for Room
-
-Endpoint : POST /api/rooms/{room_id}/read
-
-Headers:
-
-- Authorization : Bearer jwt_token
-
-Response Success body :
-
-```json
-{
-  "success": true,
-  "message": "Success read all chat"
-}
-```
-
-Response Error room id not exist :
-
-```json
-{
-  "success": false,
-  "message": "room not found"
-}
-```
-
-Auth Response Error Body :
-
-```json
-{
-  "success": false,
-  "message": "Unauthorized"
-}
-```
