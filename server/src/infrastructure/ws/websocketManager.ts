@@ -1,5 +1,4 @@
 import { ServerWebSocket } from "bun";
-import { roomsRoutes } from "../../interfaces/http/routes/rooms.route";
 export type WebSocketData = {
   userId: number;
   userPublicId: string;
